@@ -10,4 +10,6 @@ docker run -d \
     ghcr.io/cosmoscontracts/juno:v5.0.1 \
     ./setup_and_run.sh juno16g2rahf5846rxzp3fwlswy08fz8ccuwk03k57y
 
+sleep 3s
+
 echo '@@@ juno_node_1 started in background'
