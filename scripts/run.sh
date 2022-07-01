@@ -8,8 +8,8 @@ docker run -d \
     -e STAKE_TOKEN=ujunox \
     -e UNSAFE_CORS=true \
     ghcr.io/cosmoscontracts/juno:v5.0.1 \
-    ./setup_and_run.sh juno16g2rahf5846rxzp3fwlswy08fz8ccuwk03k57y
+    ./setup_and_run.sh $(junod keys show -a tester)
 
-sleep 3s
+sleep 5
 
 echo '@@@ juno_node_1 started in background'
