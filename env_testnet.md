@@ -1,6 +1,6 @@
 # JUNO Testnet (UNI)
 
-## Account
+## Accounts
 
 name (on my machine): `faucet`
 mnemonic: cabbage enroll purchase sell arm extra awful leg prison snow sure welcome shoe matrix office black much mask physical photo giant pattern enable depend
@@ -11,7 +11,7 @@ name: `alice`
 mnemonic: engage capital accident mimic fork vehicle grocery student glad pear rotate sausage scrub annual buffalo debris game miracle evolve baby wagon apple flush coffee
 address: juno1agpgyrrvesdu62dmurgdnjt2uvjmflau6mlzqq
 
-## Example Commands
+## CW20
 
 ```
 junod query bank balances juno1hpxxsgxmrqxm6rsk2ghzdlplvzr48cfwhn0zt0 --node https://rpc.uni.juno.deuslabs.fi:443
@@ -19,7 +19,7 @@ junod query bank balances juno1hpxxsgxmrqxm6rsk2ghzdlplvzr48cfwhn0zt0 --node htt
 
 ```
 junod tx wasm store contracts/cw20_base.wasm  \
-    --from martin-testnet \
+    --from faucet \
     --chain-id=uni-3 \
     --gas-prices 0.1ujunox \
     --gas auto \
@@ -29,7 +29,6 @@ junod tx wasm store contracts/cw20_base.wasm  \
     --node https://rpc.uni.juno.deuslabs.fi:443
 ```
 
-
 ==> `code id = 407`
 
 ```
@@ -38,7 +37,7 @@ junod tx wasm instantiate 407 \
     --amount 50000ujunox  \
     --label "NRIDE TOKEN INIT BALANCES" \
     --admin juno1hpxxsgxmrqxm6rsk2ghzdlplvzr48cfwhn0zt0 \
-    --from martin-testnet \
+    --from faucet \
     --chain-id uni-3 \
     --gas-prices 0.1ujunox \
     --gas auto \
@@ -50,7 +49,7 @@ junod tx wasm instantiate 407 \
 
 ==> `contract address = juno1caapzpyuhddkzps9nwatyknlvmm2av6whkk7aqse4umzmp0gpm5se7nzg7`
 
-## Check Balance
+### Check Balance
 
 ```
 junod query wasm contract-state smart juno1caapzpyuhddkzps9nwatyknlvmm2av6whkk7aqse4umzmp0gpm5se7nzg7 \
@@ -58,7 +57,7 @@ junod query wasm contract-state smart juno1caapzpyuhddkzps9nwatyknlvmm2av6whkk7a
 --node https://rpc.uni.juno.deuslabs.fi:443
 ```
 
-## Send 
+### Send 
 
 ```
 junod tx wasm execute juno1caapzpyuhddkzps9nwatyknlvmm2av6whkk7aqse4umzmp0gpm5se7nzg7 \
@@ -70,10 +69,51 @@ junod tx wasm execute juno1caapzpyuhddkzps9nwatyknlvmm2av6whkk7aqse4umzmp0gpm5se
 -y \
 --node https://rpc.uni.juno.deuslabs.fi:443
 ```
-## Check Alice balance
+### Check Alice balance
 
 ```
 junod query wasm contract-state smart juno1caapzpyuhddkzps9nwatyknlvmm2av6whkk7aqse4umzmp0gpm5se7nzg7 \
 '{"balance":{"address":"juno1agpgyrrvesdu62dmurgdnjt2uvjmflau6mlzqq"}}' \
+--node https://rpc.uni.juno.deuslabs.fi:443
+```
+
+## Escrow
+
+```
+junod tx wasm store contracts/cw20_escrow.wasm  \
+    --from faucet \
+    --chain-id=uni-3 \
+    --gas-prices 0.1ujunox \
+    --gas auto \
+    --gas-adjustment 1.3 \
+    -b block \
+    -y \
+    --node https://rpc.uni.juno.deuslabs.fi:443
+```
+
+==> `code id = 810`
+
+```
+junod tx wasm instantiate 810 \
+    '{}' \
+    --label "NRIDE ESCROW INIT" \
+    --admin juno1hpxxsgxmrqxm6rsk2ghzdlplvzr48cfwhn0zt0 \
+    --from faucet \
+    --chain-id uni-3 \
+    --gas-prices 0.1ujunox \
+    --gas auto \
+    --gas-adjustment 1.3 \
+    -b block \
+    -y \
+    --node https://rpc.uni.juno.deuslabs.fi:443
+```
+
+==> `contract address = juno1kgccy2dnhtjr70ncg70qkzwffx2ze8crtq6g27grekvv4jw03jzqn4q9wn`
+
+### List
+
+```
+junod query wasm contract-state smart juno1kgccy2dnhtjr70ncg70qkzwffx2ze8crtq6g27grekvv4jw03jzqn4q9wn \
+'{"list":{}}' \
 --node https://rpc.uni.juno.deuslabs.fi:443
 ```
