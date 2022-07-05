@@ -11,7 +11,7 @@ make deploy-cw20
 
 ```
 junod query wasm contract-state smart juno14hj2tavq8fpesdwxxcu44rty3hh90vhujrvcmstl4zr3txmfvw9skjuwg8 \
-'{"balance":{"address":"'"$(junod keys show -a tester)"'"}}'
+'{"balance":{"address":"'"$(junod keys show -a faucet)"'"}}'
 ``` 
 
 ```
@@ -21,12 +21,12 @@ junod query wasm contract-state smart juno14hj2tavq8fpesdwxxcu44rty3hh90vhujrvcm
 
 ## Send
 
-From 'tester' to 'alice'
+From 'faucet' to 'alice'
 
 ```
 junod tx wasm execute juno14hj2tavq8fpesdwxxcu44rty3hh90vhujrvcmstl4zr3txmfvw9skjuwg8 \
 '{"transfer":{"amount":"200","recipient":"'"$(junod keys show -a alice)"'"}}' \
---from tester \
+--from faucet \
 --chain-id testing \
 -b block \
 -y

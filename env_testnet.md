@@ -96,10 +96,11 @@ junod tx wasm store contracts/cw20_escrow.wasm  \
 ```
 junod tx wasm instantiate 810 \
     '{}' \
+    --amount 50000ujunox  \
     --label "NRIDE ESCROW INIT" \
     --admin juno1hpxxsgxmrqxm6rsk2ghzdlplvzr48cfwhn0zt0 \
     --from faucet \
-    --chain-id uni-3 \
+    --chain-id=uni-3 \
     --gas-prices 0.1ujunox \
     --gas auto \
     --gas-adjustment 1.3 \
@@ -108,12 +109,12 @@ junod tx wasm instantiate 810 \
     --node https://rpc.uni.juno.deuslabs.fi:443
 ```
 
-==> `contract address = juno1kgccy2dnhtjr70ncg70qkzwffx2ze8crtq6g27grekvv4jw03jzqn4q9wn`
+==> `contract address = juno1eds9t7rpfsfeyu35nevyc8tglumvejjg6p0yegkrv4wjlf0lghtqwy75uv`
 
 ### List
 
 ```
-junod query wasm contract-state smart juno1kgccy2dnhtjr70ncg70qkzwffx2ze8crtq6g27grekvv4jw03jzqn4q9wn \
+junod query wasm contract-state smart juno1eds9t7rpfsfeyu35nevyc8tglumvejjg6p0yegkrv4wjlf0lghtqwy75uv \
 '{"list":{}}' \
 --node https://rpc.uni.juno.deuslabs.fi:443
 ```

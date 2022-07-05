@@ -1,7 +1,7 @@
 #!/bin/sh
 
 junod tx wasm store contracts/cw20_escrow.wasm  \
-    --from tester \
+    --from faucet \
     --chain-id=testing \
     --gas-prices 0.1ujunox \
     --gas auto \

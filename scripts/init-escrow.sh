@@ -7,7 +7,7 @@ junod tx wasm instantiate 2 \
     --amount 50000ujunox  \
     --label "NRIDE ESCROW INIT" \
     --no-admin \
-    --from tester \
+    --from faucet \
     --chain-id testing \
     --gas-prices 0.1ujunox \
     --gas auto \

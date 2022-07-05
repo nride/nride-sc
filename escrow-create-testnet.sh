@@ -14,19 +14,22 @@ ESCROW_EXECUTE='{ "create": '"$CREATE_CONTENT"'}'
 MSG=$(echo "$ESCROW_EXECUTE" | base64)
 
 SEND_CONTENT='{'\
-'"contract": "juno1nc5tatafv6eyq7llkr2gv50ff9e22mnf70qgjlv737ktmt4eswrq68ev2p",'\
-'"amount": "100",'\
+'"contract": "juno1eds9t7rpfsfeyu35nevyc8tglumvejjg6p0yegkrv4wjlf0lghtqwy75uv",'\
+'"amount": "0ujunox",'\
 '"msg": "'$MSG'"'\
 '}'
+
 
 TOKEN_EXECUTE='{"send": '"$SEND_CONTENT"'}'
 
 echo $TOKEN_EXECUTE | jq 
 
-junod tx wasm execute juno14hj2tavq8fpesdwxxcu44rty3hh90vhujrvcmstl4zr3txmfvw9skjuwg8 \
+junod tx wasm execute juno1caapzpyuhddkzps9nwatyknlvmm2av6whkk7aqse4umzmp0gpm5se7nzg7 \
 "$TOKEN_EXECUTE" \
 --from faucet \
---gas 210000 \
---chain-id testing \
+--chain-id=uni-3 \
+--gas 223000 \
+--gas-prices 1ujunox \
 -b block \
--y
+-y \
+--node https://rpc.uni.juno.deuslabs.fi:443
