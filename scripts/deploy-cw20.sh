@@ -1,10 +1,13 @@
 #!/bin/sh
 
-junod tx wasm store contracts/cw20_base.wasm  \
+$CMD tx wasm store contracts/cw20_base.wasm  \
     --from faucet \
-    --chain-id=testing \
-    --gas-prices 0.1ujunox \
+    --chain-id=$CHAINID \
+    --gas-prices 0.1uconst \
     --gas auto \
     --gas-adjustment 1.3 \
+    --node $NODE\
     -b block \
     -y
+
+## code id 1

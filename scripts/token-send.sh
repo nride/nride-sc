@@ -1,8 +1,15 @@
 #!/bin/sh
 
-junod tx wasm execute juno14hj2tavq8fpesdwxxcu44rty3hh90vhujrvcmstl4zr3txmfvw9skjuwg8 \
-'{"transfer":{"amount":"200","recipient":"'"$(junod keys show -a alice)"'"}}' \
---from faucet \
---chain-id testing \
+set -eux
+
+FROM=$1
+TO=$2
+
+$CMD tx wasm execute $NRIDE \
+'{"transfer":{"amount":"100","recipient":"'"$($CMD keys show -a $TO)"'"}}' \
+--from $FROM \
+--gas-prices 0.1$FEETOKEN \
+--chain-id $CHAINID \
+--node $NODE \
 -b block \
 -y

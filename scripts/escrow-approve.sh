@@ -1,8 +1,11 @@
 #!/bin/sh
 
-junod tx wasm execute juno1nc5tatafv6eyq7llkr2gv50ff9e22mnf70qgjlv737ktmt4eswrq68ev2p \
+$CMD tx wasm execute $ESCROW \
 '{"approve":{"id": "first-escrow-id"}}' \
 --from faucet \
---chain-id testing \
+--gas 230000 \
+--gas-prices 0.1$FEETOKEN \
+--chain-id $CHAINID \
+--node $NODE \
 -b block \
 -y

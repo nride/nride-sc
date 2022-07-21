@@ -2,17 +2,16 @@
 
 set -eux
 
-junod tx wasm instantiate 2 \
+$CMD tx wasm instantiate 2 \
     '{}' \
-    --amount 50000ujunox  \
+    --amount 50000$FEETOKEN  \
     --label "NRIDE ESCROW INIT" \
     --no-admin \
     --from faucet \
-    --chain-id testing \
-    --gas-prices 0.1ujunox \
+    --chain-id $CHAINID \
+    --gas-prices 0.1$FEETOKEN \
     --gas auto \
     --gas-adjustment 1.3 \
+    --node $NODE\
     -b block \
     -y 
-
-# address: juno1nc5tatafv6eyq7llkr2gv50ff9e22mnf70qgjlv737ktmt4eswrq68ev2p
