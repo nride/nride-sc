@@ -25,6 +25,9 @@ token-balance:
 token-send:
 	./scripts/token-send.sh $(from) $(to)
 
+token-send-grant:
+	./scripts/token-send-grant.sh $(from) $(to)
+
 escrow-create:
 	./scripts/escrow-create.sh
 
