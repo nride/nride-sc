@@ -2,8 +2,8 @@ export CMD = junod
 export NODE = https://rpc.uni.juno.deuslabs.fi:443
 export CHAINID = uni-3
 export FEETOKEN = ujunox
-export NRIDE = juno1caapzpyuhddkzps9nwatyknlvmm2av6whkk7aqse4umzmp0gpm5se7nzg7
-export ESCROW = juno1eds9t7rpfsfeyu35nevyc8tglumvejjg6p0yegkrv4wjlf0lghtqwy75uv
+export NRIDE = juno1caapzpyuhddkzps9nwatyknlvmm2av6whkk7aqse4umzmp0gpm5se7nzg7 # address of the cw20 token smart-contract
+export ESCROW = juno1eds9t7rpfsfeyu35nevyc8tglumvejjg6p0yegkrv4wjlf0lghtqwy75uv # address of the escrow smart-contract
 
 deploy-cw20:
 	./scripts/deploy-cw20.sh
