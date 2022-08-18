@@ -33,3 +33,9 @@ make token-send from=faucet to=alice
 ```
 
 There are many other Makefile recipes to test...
+
+## Smart Contracts
+
+cw20_base: https://github.com/CosmWasm/cw-plus/tree/main/contracts/cw20-base
+
+cw20_escrow: https://github.com/CosmWasm/cw-tokens/tree/main/contracts/cw20-escrow
