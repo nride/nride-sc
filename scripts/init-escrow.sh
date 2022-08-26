@@ -2,7 +2,9 @@
 
 set -eux
 
-$CMD tx wasm instantiate 2 \
+CODE=$1
+
+$CMD tx wasm instantiate $CODE \
     '{}' \
     --amount 50000$FEETOKEN  \
     --label "NRIDE ESCROW INIT" \

@@ -1,17 +1,47 @@
 export CMD = junod
-export NODE = https://rpc.uni.juno.deuslabs.fi:443
-export CHAINID = uni-3
+
+# Uncomment the section for required network
+
+###########
+## LOCAL ##
+###########
+export NODE = http://localhost:26657
+export CHAINID = testing
 export FEETOKEN = ujunox
-export NRIDE = juno1caapzpyuhddkzps9nwatyknlvmm2av6whkk7aqse4umzmp0gpm5se7nzg7 # address of the cw20 token smart-contract
-export ESCROW = juno1eds9t7rpfsfeyu35nevyc8tglumvejjg6p0yegkrv4wjlf0lghtqwy75uv # address of the escrow smart-contract
+export ESCROW = juno14hj2tavq8fpesdwxxcu44rty3hh90vhujrvcmstl4zr3txmfvw9skjuwg8
+
+########################
+## JUNO UNI-3 Testnet ##
+########################
+# export NODE = https://rpc.uni.juno.deuslabs.fi:443
+# export CHAINID = uni-3
+# export FEETOKEN = ujunox
+# export NRIDE = juno1caapzpyuhddkzps9nwatyknlvmm2av6whkk7aqse4umzmp0gpm5se7nzg7 # address of the cw20 token smart-contract
+# export ESCROW = juno1eds9t7rpfsfeyu35nevyc8tglumvejjg6p0yegkrv4wjlf0lghtqwy75uv # address of the escrow smart-contract
+
+start-node:
+	./scripts/docker-run.sh
+
+stop-node:
+	./scripts/docker-stop.sh
+
+compile-cw20:
+	./scripts/compile.sh "$(shell pwd)/cw-plus"
+
+compile-i4i:
+	./scripts/compile.sh "$(shell pwd)/cw-i4i"
 
 deploy-cw20:
 	./scripts/deploy-cw20.sh
-	./scripts/init-cw20.sh
+
+init-cw20:
+	./scripts/init-cw20.sh $(code)
 
 deploy-escrow:
 	./scripts/deploy-escrow.sh
-	./scripts/init-escrow.sh
+	
+init-escrow:
+	./scripts/init-escrow.sh $(code)
 
 token-info:
 	./scripts/token-info.sh

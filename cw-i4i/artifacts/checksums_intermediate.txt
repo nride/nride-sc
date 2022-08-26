@@ -1,0 +1,1 @@
+526ceef9724b1a856504912337917b11bc2ff2e9ade70fc7bfebfb06a3593d2c  ./target/wasm32-unknown-unknown/release/cw20_i4i.wasm

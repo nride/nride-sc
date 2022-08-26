@@ -1,9 +1,9 @@
 #!/bin/sh
 
-$CMD tx wasm store contracts/cw20_base.wasm  \
+$CMD tx wasm store cw-plus/contracts/cw20_base/artifactcw20_base.wasm  \
     --from faucet \
     --chain-id=$CHAINID \
-    --gas-prices 0.1uconst \
+    --gas-prices 0.1ujunox \
     --gas auto \
     --gas-adjustment 1.3 \
     --node $NODE\
