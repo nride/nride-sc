@@ -8,7 +8,8 @@ export CMD = junod
 export NODE = http://localhost:26657
 export CHAINID = testing
 export FEETOKEN = ujunox
-export ESCROW = juno14hj2tavq8fpesdwxxcu44rty3hh90vhujrvcmstl4zr3txmfvw9skjuwg8
+export NRIDE = juno14hj2tavq8fpesdwxxcu44rty3hh90vhujrvcmstl4zr3txmfvw9skjuwg8
+export ESCROW = juno1nc5tatafv6eyq7llkr2gv50ff9e22mnf70qgjlv737ktmt4eswrq68ev2p
 
 ########################
 ## JUNO UNI-3 Testnet ##
@@ -26,7 +27,7 @@ stop-node:
 	./scripts/docker-stop.sh
 
 compile-cw20:
-	./scripts/compile.sh "$(shell pwd)/cw-plus"
+	./scripts/compile-workspace.sh "$(shell pwd)/cw-plus"
 
 compile-i4i:
 	./scripts/compile.sh "$(shell pwd)/cw-i4i"

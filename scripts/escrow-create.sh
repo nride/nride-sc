@@ -30,8 +30,9 @@ echo $TOKEN_EXECUTE | jq
 $CMD tx wasm execute $NRIDE \
 "$TOKEN_EXECUTE" \
 --from faucet \
---gas 230000 \
 --gas-prices 0.1$FEETOKEN \
+--gas auto \
+--gas-adjustment 1.3 \
 --chain-id $CHAINID \
 --node $NODE \
 -b block \
