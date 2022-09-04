@@ -24,3 +24,12 @@ pub enum ContractError {
     #[error("Recipient is not set")]
     RecipientNotSet {},
 }
+
+#[derive(Error, Debug, PartialEq)]
+pub enum AccountError {
+    #[error("{0}")]
+    Std(#[from] StdError),
+
+    #[error("Invalid State")]
+    InvalidState {},
+}
