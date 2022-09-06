@@ -1,7 +1,7 @@
 use cosmwasm_std::{Addr, StdError };
 use cw20::{Balance};
 
-use crate::{account::{Account, UserAction}, error::AccountError};
+use crate::{account::{Account, UserAction, AccountStatus}, error::AccountError};
 
 #[derive(Clone, PartialEq,Debug)]
 pub struct WithdrawResult {
@@ -48,25 +48,31 @@ impl Escrow {
 
     /// Set the sender's account AccountStatus to Funded
     /// Returns an AccountError if this is an invalid state transition
-    pub fn fund(&mut self, sender: Addr) -> Result<(), AccountError> {
+    /// Also sets the lock on the counterparty's account
+    pub fn fund(&mut self, sender: Addr, lock: &str) -> Result<(), AccountError> {
         if sender == self.user_a {
+            self.account_b.set_lock(lock);
             return self.account_a.fund();
+
         }
         if sender == self.user_b {
+            self.account_a.set_lock(lock);
             return self.account_b.fund();
         }
         Err(AccountError::Std(StdError::NotFound {kind:"sender is not user_a or user_b".to_string()}))
     }
 
-    /// Set the counterparty's account UserAction to Approved
-    /// NOTE: It is not the sender's account that gets approved, but the counterparty's
+    /// Set the sender's UserAction to Approved
     /// Returns an AccountError if this is an invalid state transition
-    pub fn approve_counterparty(&mut self, sender: Addr) -> Result<(), AccountError> {
+    /// GUARDED by the counterparty's secret such that
+    /// a user can only approve its own Account if it is in posession of the counterparty's 
+    /// secret
+    pub fn approve(&mut self, sender: Addr, secret: &str) -> Result<(), AccountError> {
         if sender == self.user_a {
-            return self.account_b.approve();
+            return self.account_a.approve(secret);
         }
         if sender == self.user_b {
-            return self.account_a.approve();
+            return self.account_b.approve(secret);
         }
         Err(AccountError::Std(StdError::NotFound {kind:"sender is not user_a or user_b".to_string()}))
     }
@@ -103,6 +109,8 @@ impl Escrow {
     /// 
     /// Returns an StdError if the escrow is not in a withdrawable state
     pub fn withdraw(&mut self) -> Result<WithdrawResult, StdError> {
+       // ATTENTION: Add T1 State where one of the accounts is not funded before T1 timeout 
+
         match (&self.account_a.action, &self.account_b.action) {
             (UserAction::Approved, UserAction::Approved) => {
                 Ok(WithdrawResult{user_a_basis_points:100, user_b_basis_points:100})
@@ -138,11 +146,15 @@ impl Escrow {
 
 #[cfg(test)]
 mod tests {
-    use crate::account::{AccountStatus, UserAction};
-    use cw20::{Cw20CoinVerified};
     use super::*;
 
+    use crate::account::{AccountStatus, UserAction};
+    use cw20::{Cw20CoinVerified};
+    
     use cosmwasm_std::{Uint128};
+
+    static DUMMY_LOCK: &str = "04b4ac68eff3a82d86db5f0489d66f91707e99943bf796ae6a2dcb2205c9522fa7915428b5ac3d3b9291e62142e7246d85ad54504fabbdb2bae5795161f8ddf259";
+    static DUMMY_SECRET: &str =  "3c9229289a6125f7fdf1885a77bb12c37a8d3b4962d936f7e3084dece32a3ca1";   
 
     fn dummy_escrow() -> Escrow {
         let coin = Cw20CoinVerified {
@@ -171,29 +183,29 @@ mod tests {
     fn escrow_fund() {
         let mut e = dummy_escrow();
 
-        let err = e.fund(Addr::unchecked("bad")).unwrap_err();
+        let err = e.fund(Addr::unchecked("bad"), DUMMY_LOCK).unwrap_err();
         assert!(matches!(err, AccountError::Std(_)));
 
-        let _ = e.fund(Addr::unchecked("user_a")).unwrap();
+        let _ = e.fund(Addr::unchecked("user_a"), DUMMY_LOCK).unwrap();
         assert_eq!(e.account_a.status, AccountStatus::Funded);
         assert_eq!(e.account_a.action, UserAction::None);
         assert_eq!(e.account_b.status, AccountStatus::Init);
         assert_eq!(e.account_b.action, UserAction::None);
 
-        let _ = e.fund(Addr::unchecked("user_b")).unwrap();
+        let _ = e.fund(Addr::unchecked("user_b"), DUMMY_LOCK).unwrap();
         assert_eq!(e.account_a.status, AccountStatus::Funded);
         assert_eq!(e.account_a.action, UserAction::None);
         assert_eq!(e.account_b.status, AccountStatus::Funded);
         assert_eq!(e.account_b.action, UserAction::None);
 
-        let err = e.fund(Addr::unchecked("user_a")).unwrap_err();
+        let err = e.fund(Addr::unchecked("user_a"), DUMMY_LOCK).unwrap_err();
         assert!(matches!(err, AccountError::InvalidState {  }));
         assert_eq!(e.account_a.status, AccountStatus::Funded);
         assert_eq!(e.account_a.action, UserAction::None);
         assert_eq!(e.account_b.status, AccountStatus::Funded);
         assert_eq!(e.account_b.action, UserAction::None);
 
-        let err = e.fund(Addr::unchecked("user_b")).unwrap_err();
+        let err = e.fund(Addr::unchecked("user_b"), DUMMY_LOCK).unwrap_err();
         assert!(matches!(err, AccountError::InvalidState {  }));
         assert_eq!(e.account_a.status, AccountStatus::Funded);
         assert_eq!(e.account_a.action, UserAction::None);
@@ -206,37 +218,37 @@ mod tests {
         let mut e = dummy_escrow();
 
         // fund both accounts before attempting to approve
-        let _ = e.fund(Addr::unchecked("user_a")).unwrap();
-        let _ = e.fund(Addr::unchecked("user_b")).unwrap();
+        let _ = e.fund(Addr::unchecked("user_a"), DUMMY_LOCK).unwrap();
+        let _ = e.fund(Addr::unchecked("user_b"), DUMMY_LOCK).unwrap();
 
         // test that only user_a and user_b can approve
-        let err = e.approve_counterparty(Addr::unchecked("bad")).unwrap_err();
+        let err = e.approve(Addr::unchecked("bad"), DUMMY_SECRET).unwrap_err();
         assert!(matches!(err, AccountError::Std(_)));
 
-        // test that user_a can approve user_b's account
-        let _ = e.approve_counterparty(Addr::unchecked("user_a")).unwrap();
+        // test that user_a can approve its own account
+        let _ = e.approve(Addr::unchecked("user_a"), DUMMY_SECRET).unwrap();
         assert_eq!(e.account_a.status, AccountStatus::Funded);
-        assert_eq!(e.account_a.action, UserAction::None);
+        assert_eq!(e.account_a.action, UserAction::Approved);
         assert_eq!(e.account_b.status, AccountStatus::Funded);
-        assert_eq!(e.account_b.action, UserAction::Approved);
+        assert_eq!(e.account_b.action, UserAction::None);
 
-        // test that user_b can approve user_a's account
-        let _ = e.approve_counterparty(Addr::unchecked("user_b")).unwrap();
-        assert_eq!(e.account_b.status, AccountStatus::Funded);
-        assert_eq!(e.account_b.action, UserAction::Approved);
+        // test that user_b can approve its own account
+        let _ = e.approve(Addr::unchecked("user_b"), DUMMY_SECRET).unwrap();
+        assert_eq!(e.account_a.status, AccountStatus::Funded);
+        assert_eq!(e.account_a.action, UserAction::Approved);
         assert_eq!(e.account_b.status, AccountStatus::Funded);
         assert_eq!(e.account_b.action, UserAction::Approved);
 
         // test that you can't do it twice
-        let err = e.approve_counterparty(Addr::unchecked("user_a")).unwrap_err();
-        assert!(matches!(err, AccountError::InvalidState {  }));
-        assert_eq!(e.account_b.status, AccountStatus::Funded);
-        assert_eq!(e.account_b.action, UserAction::Approved);
-
-        let err = e.approve_counterparty(Addr::unchecked("user_b")).unwrap_err();
+        let err = e.approve(Addr::unchecked("user_a"), DUMMY_SECRET).unwrap_err();
         assert!(matches!(err, AccountError::InvalidState {  }));
         assert_eq!(e.account_a.status, AccountStatus::Funded);
         assert_eq!(e.account_a.action, UserAction::Approved);
+
+        let err = e.approve(Addr::unchecked("user_b"), DUMMY_SECRET).unwrap_err();
+        assert!(matches!(err, AccountError::InvalidState {  }));
+        assert_eq!(e.account_b.status, AccountStatus::Funded);
+        assert_eq!(e.account_b.action, UserAction::Approved);
     }
 
     #[test]
@@ -248,8 +260,8 @@ mod tests {
         assert!(matches!(err, AccountError::Std(_)));
 
         // fund accounts before cancelling
-        let _ = e.fund(Addr::unchecked("user_a")).unwrap();
-        let _ = e.fund(Addr::unchecked("user_b")).unwrap();
+        let _ = e.fund(Addr::unchecked("user_a"), DUMMY_LOCK).unwrap();
+        let _ = e.fund(Addr::unchecked("user_b"), DUMMY_LOCK).unwrap();
 
         // test user_a cancel
         let _ = e.cancel(Addr::unchecked("user_a")).unwrap();
@@ -271,8 +283,8 @@ mod tests {
         let mut e = dummy_escrow();
 
         // fund accounts before timing out
-        let _ = e.fund(Addr::unchecked("user_a")).unwrap();
-        let _ = e.fund(Addr::unchecked("user_b")).unwrap();
+        let _ = e.fund(Addr::unchecked("user_a"), DUMMY_LOCK).unwrap();
+        let _ = e.fund(Addr::unchecked("user_b"), DUMMY_LOCK).unwrap();
 
         // account a
         let _ = e.t2( Addr::unchecked("user_a")).unwrap();
@@ -302,10 +314,10 @@ mod tests {
                 expected: Ok(WithdrawResult{user_a_basis_points:100, user_b_basis_points:100}),
                 init:  || {
                     let mut escrow = dummy_escrow();
-                    let _ = escrow.fund(Addr::unchecked("user_a")).unwrap();
-                    let _ = escrow.fund(Addr::unchecked("user_b")).unwrap();
-                    let _ = escrow.approve_counterparty(Addr::unchecked("user_a")).unwrap();
-                    let _ = escrow.approve_counterparty(Addr::unchecked("user_b")).unwrap();
+                    let _ = escrow.fund(Addr::unchecked("user_a"), DUMMY_LOCK).unwrap();
+                    let _ = escrow.fund(Addr::unchecked("user_b"), DUMMY_LOCK).unwrap();
+                    let _ = escrow.approve(Addr::unchecked("user_a"), DUMMY_SECRET).unwrap();
+                    let _ = escrow.approve(Addr::unchecked("user_b"), DUMMY_SECRET).unwrap();
                     return escrow;
                 },
             },
@@ -314,9 +326,9 @@ mod tests {
                 expected: Ok(WithdrawResult{user_a_basis_points:130, user_b_basis_points:70}),
                 init:  || {
                     let mut escrow = dummy_escrow();
-                    let _ = escrow.fund(Addr::unchecked("user_a")).unwrap();
-                    let _ = escrow.fund(Addr::unchecked("user_b")).unwrap();
-                    let _ = escrow.approve_counterparty(Addr::unchecked("user_b")).unwrap();
+                    let _ = escrow.fund(Addr::unchecked("user_a"), DUMMY_LOCK).unwrap();
+                    let _ = escrow.fund(Addr::unchecked("user_b"), DUMMY_LOCK).unwrap();
+                    let _ = escrow.approve(Addr::unchecked("user_a"), DUMMY_SECRET).unwrap();
                     let _ = escrow.cancel(Addr::unchecked("user_b")).unwrap();
                     return escrow;
                 },
@@ -326,9 +338,9 @@ mod tests {
                 expected: Ok(WithdrawResult{user_a_basis_points:150, user_b_basis_points:50}),
                 init:  || {
                     let mut escrow = dummy_escrow();
-                    let _ = escrow.fund(Addr::unchecked("user_a")).unwrap();
-                    let _ = escrow.fund(Addr::unchecked("user_b")).unwrap();
-                    let _ = escrow.approve_counterparty(Addr::unchecked("user_b")).unwrap();
+                    let _ = escrow.fund(Addr::unchecked("user_a"), DUMMY_LOCK).unwrap();
+                    let _ = escrow.fund(Addr::unchecked("user_b"), DUMMY_LOCK).unwrap();
+                    let _ = escrow.approve(Addr::unchecked("user_a"), DUMMY_SECRET).unwrap();
                     let _ = escrow.t2(Addr::unchecked("user_b")).unwrap();
                     return escrow;
                 },
@@ -338,9 +350,9 @@ mod tests {
                 expected: Ok(WithdrawResult{user_a_basis_points:70, user_b_basis_points:130}),
                 init:  || {
                     let mut escrow = dummy_escrow();
-                    let _ = escrow.fund(Addr::unchecked("user_a")).unwrap();
-                    let _ = escrow.fund(Addr::unchecked("user_b")).unwrap();
-                    let _ = escrow.approve_counterparty(Addr::unchecked("user_a")).unwrap();
+                    let _ = escrow.fund(Addr::unchecked("user_a"), DUMMY_LOCK).unwrap();
+                    let _ = escrow.fund(Addr::unchecked("user_b"), DUMMY_LOCK).unwrap();
+                    let _ = escrow.approve(Addr::unchecked("user_b"), DUMMY_SECRET).unwrap();
                     let _ = escrow.cancel(Addr::unchecked("user_a")).unwrap();
                     return escrow;
                 },
@@ -350,8 +362,8 @@ mod tests {
                 expected: Ok(WithdrawResult{user_a_basis_points:50, user_b_basis_points:50}),
                 init:  || {
                     let mut escrow = dummy_escrow();
-                    let _ = escrow.fund(Addr::unchecked("user_a")).unwrap();
-                    let _ = escrow.fund(Addr::unchecked("user_b")).unwrap();
+                    let _ = escrow.fund(Addr::unchecked("user_a"), DUMMY_LOCK).unwrap();
+                    let _ = escrow.fund(Addr::unchecked("user_b"), DUMMY_LOCK).unwrap();
                     let _ = escrow.cancel(Addr::unchecked("user_a")).unwrap();
                     let _ = escrow.cancel(Addr::unchecked("user_b")).unwrap();
                     return escrow;
@@ -362,8 +374,8 @@ mod tests {
                 expected: Ok(WithdrawResult{user_a_basis_points:50, user_b_basis_points:0}),
                 init:  || {
                     let mut escrow = dummy_escrow();
-                    let _ = escrow.fund(Addr::unchecked("user_a")).unwrap();
-                    let _ = escrow.fund(Addr::unchecked("user_b")).unwrap();
+                    let _ = escrow.fund(Addr::unchecked("user_a"), DUMMY_LOCK).unwrap();
+                    let _ = escrow.fund(Addr::unchecked("user_b"), DUMMY_LOCK).unwrap();
                     let _ = escrow.cancel(Addr::unchecked("user_a")).unwrap();
                     let _ = escrow.t2(Addr::unchecked("user_b")).unwrap();
                     return escrow;
@@ -374,9 +386,9 @@ mod tests {
                 expected: Ok(WithdrawResult{user_a_basis_points:50, user_b_basis_points:150}),
                 init:  || {
                     let mut escrow = dummy_escrow();
-                    let _ = escrow.fund(Addr::unchecked("user_a")).unwrap();
-                    let _ = escrow.fund(Addr::unchecked("user_b")).unwrap();
-                    let _ = escrow.approve_counterparty(Addr::unchecked("user_a")).unwrap();
+                    let _ = escrow.fund(Addr::unchecked("user_a"), DUMMY_LOCK).unwrap();
+                    let _ = escrow.fund(Addr::unchecked("user_b"), DUMMY_LOCK).unwrap();
+                    let _ = escrow.approve(Addr::unchecked("user_b"), DUMMY_SECRET).unwrap();
                     let _ = escrow.t2(Addr::unchecked("user_a")).unwrap();
                     return escrow;
                 },
@@ -386,8 +398,8 @@ mod tests {
                 expected: Ok(WithdrawResult{user_a_basis_points:0, user_b_basis_points:50}),
                 init:  || {
                     let mut escrow = dummy_escrow();
-                    let _ = escrow.fund(Addr::unchecked("user_a")).unwrap();
-                    let _ = escrow.fund(Addr::unchecked("user_b")).unwrap();
+                    let _ = escrow.fund(Addr::unchecked("user_a"), DUMMY_LOCK).unwrap();
+                    let _ = escrow.fund(Addr::unchecked("user_b"), DUMMY_LOCK).unwrap();
                     let _ = escrow.t2(Addr::unchecked("user_a")).unwrap();
                     let _ = escrow.cancel(Addr::unchecked("user_b")).unwrap();
                     return escrow;
@@ -398,8 +410,8 @@ mod tests {
                 expected: Ok(WithdrawResult{user_a_basis_points:0, user_b_basis_points:0}),
                 init:  || {
                     let mut escrow = dummy_escrow();
-                    let _ = escrow.fund(Addr::unchecked("user_a")).unwrap();
-                    let _ = escrow.fund(Addr::unchecked("user_b")).unwrap();
+                    let _ = escrow.fund(Addr::unchecked("user_a"), DUMMY_LOCK).unwrap();
+                    let _ = escrow.fund(Addr::unchecked("user_b"), DUMMY_LOCK).unwrap();
                     let _ = escrow.t2(Addr::unchecked("user_a")).unwrap();
                     let _ = escrow.t2(Addr::unchecked("user_b")).unwrap();
                     return escrow;
@@ -431,21 +443,11 @@ mod tests {
                 },
             },
             TestCase{
-                name: "(OK, NONE)".to_string(),
-                expected: Err(StdError::GenericErr{msg:"invalid state".to_string()}),
-                init:  || {
-                    let mut escrow = dummy_escrow();
-                    let _ = escrow.fund(Addr::unchecked("user_a")).unwrap();
-                    let _ = escrow.approve_counterparty(Addr::unchecked("user_b")).unwrap();
-                    return escrow;
-                },
-            },
-            TestCase{
                 name: "(CANCEL, NONE)".to_string(),
                 expected: Err(StdError::GenericErr{msg:"invalid state".to_string()}),
                 init:  || {
                     let mut escrow = dummy_escrow();
-                    let _ = escrow.fund(Addr::unchecked("user_a")).unwrap();
+                    let _ = escrow.fund(Addr::unchecked("user_a"), DUMMY_LOCK).unwrap();
                     let _ = escrow.cancel(Addr::unchecked("user_a")).unwrap();
                     return escrow;
                 },
@@ -455,19 +457,8 @@ mod tests {
                 expected: Err(StdError::GenericErr{msg:"invalid state".to_string()}),
                 init:  || {
                     let mut escrow = dummy_escrow();
-                    let _ = escrow.fund(Addr::unchecked("user_a")).unwrap();
+                    let _ = escrow.fund(Addr::unchecked("user_a"), DUMMY_LOCK).unwrap();
                     let _ = escrow.t2(Addr::unchecked("user_a")).unwrap();
-                    return escrow;
-                },
-            },
-
-            TestCase{
-                name: "(NONE, OK)".to_string(),
-                expected: Err(StdError::GenericErr{msg:"invalid state".to_string()}),
-                init:  || {
-                    let mut escrow = dummy_escrow();
-                    let _ = escrow.fund(Addr::unchecked("user_b")).unwrap();
-                    let _ = escrow.approve_counterparty(Addr::unchecked("user_a")).unwrap();
                     return escrow;
                 },
             },
@@ -476,7 +467,7 @@ mod tests {
                 expected: Err(StdError::GenericErr{msg:"invalid state".to_string()}),
                 init:  || {
                     let mut escrow = dummy_escrow();
-                    let _ = escrow.fund(Addr::unchecked("user_b")).unwrap();
+                    let _ = escrow.fund(Addr::unchecked("user_b"), DUMMY_LOCK).unwrap();
                     let _ = escrow.cancel(Addr::unchecked("user_b")).unwrap();
                     return escrow;
                 },
@@ -486,7 +477,7 @@ mod tests {
                 expected: Err(StdError::GenericErr{msg:"invalid state".to_string()}),
                 init:  || {
                     let mut escrow = dummy_escrow();
-                    let _ = escrow.fund(Addr::unchecked("user_b")).unwrap();
+                    let _ = escrow.fund(Addr::unchecked("user_b"), DUMMY_LOCK).unwrap();
                     let _ = escrow.t2(Addr::unchecked("user_b")).unwrap();
                     return escrow;
                 },
@@ -505,5 +496,4 @@ mod tests {
             assert_eq!(tc.expected, res,  "{}", tc.name);
         }
     }
-
 }

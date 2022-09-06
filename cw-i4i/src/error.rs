@@ -32,4 +32,7 @@ pub enum AccountError {
 
     #[error("Invalid State")]
     InvalidState {},
+
+    #[error("Invalid Secret")]
+    InvalidSecret {}
 }

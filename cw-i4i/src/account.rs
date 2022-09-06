@@ -1,6 +1,11 @@
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
+use k256::{
+    ecdsa::SigningKey,              
+    elliptic_curve::sec1::ToEncodedPoint,
+};
+
 use crate::error::AccountError;
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, JsonSchema, Debug)]
@@ -21,6 +26,7 @@ pub enum UserAction {
 pub struct Account {
     pub status: AccountStatus,
     pub action: UserAction,
+    pub lock: Option<String>,
 }
 
 impl Account {
@@ -29,6 +35,7 @@ impl Account {
         Account{
             status: AccountStatus::Init,
             action: UserAction::None,
+            lock: None,
         }
     }
 
@@ -36,6 +43,7 @@ impl Account {
     /// if the account is in any state other than [INIT, NONE], the function returns 
     /// an AccountError::InvalidState
     pub fn fund(&mut self) -> Result<(),AccountError> {
+        // TODO: check valid pub key
         match (&self.status, &self.action) {
             (AccountStatus::Init, UserAction::None )=> {
                 self.status = AccountStatus::Funded;
@@ -47,12 +55,22 @@ impl Account {
         }
     }
 
+    pub fn set_lock(&mut self, lock: &str) {
+        self.lock = Some(lock.to_string());
+    }
+
     /// This triggers a state transition from [FUNDED, NONE] to [FUNDED, APPROVED]
     /// if the account is in any state other than [FUNDED, NONE], the function returns 
     /// an AccountError::InvalidState
-    pub fn approve(&mut self) -> Result<(),AccountError> {
+    /// The operation is guarded by the account lock, so the method accepts a secret
+    /// with which we attempt to unlock the account before approving it
+    pub fn approve(&mut self, secret: &str) -> Result<(),AccountError> {
         match (&self.status, &self.action) {
             (AccountStatus::Funded, UserAction::None) => {
+                let unlock_res = self.unlock(secret);
+                if unlock_res.is_err() {
+                    return unlock_res;
+                }
                 self.action = UserAction::Approved;
                 return Ok(());
             },
@@ -60,6 +78,34 @@ impl Account {
                 return Err(AccountError::InvalidState{});
             },
         }
+    }
+
+    fn unlock(&mut self, secret:&str) -> Result<(), AccountError> {
+        if self.lock.is_none() {
+            return Err(AccountError::InvalidState {  });
+        }
+        
+        let private_key = hex::decode(secret);
+        if private_key.is_err() {
+            return Err(AccountError::InvalidSecret {  });
+        }
+
+        let recomputed_public_key = SigningKey::from_bytes(&private_key.unwrap())
+        .unwrap()
+        .verifying_key()
+        .to_encoded_point(false)
+        .as_bytes()
+        .to_vec();
+
+        let recomputed_public_key_str = hex::encode(recomputed_public_key);
+
+        let lock = self.lock.clone().unwrap();
+
+        if recomputed_public_key_str == lock {
+            return Ok(());
+        }
+
+        return Err(AccountError::InvalidSecret{});
     }
 
     /// This triggers a state transition from [FUNDED, NONE] to [FUNDED, CANCEL]
@@ -124,20 +170,24 @@ mod tests {
     use super::*;
     use std::collections::HashMap;
 
+    static DUMMY_LOCK: &str = "04b4ac68eff3a82d86db5f0489d66f91707e99943bf796ae6a2dcb2205c9522fa7915428b5ac3d3b9291e62142e7246d85ad54504fabbdb2bae5795161f8ddf259";
+    static DUMMY_SECRET_CORRECT: &str = "3c9229289a6125f7fdf1885a77bb12c37a8d3b4962d936f7e3084dece32a3ca1";
+    static DUMMY_SECRET_INCORRECT: &str = "3c9229289a6125f7fdf1885a77bb12c37a8d3b4962d936f7e3084dece32xxxxx";
+
      fn all_states() -> HashMap<String, Account> {
         return HashMap::from([
-            ("[INIT,NONE]".to_string(), Account{status: AccountStatus::Init, action: UserAction::None}),
-            ("[INIT,APPROVED]".to_string(), Account{status: AccountStatus::Init, action: UserAction::Approved}),
-            ("[INIT,CANCELLED]".to_string(), Account{status: AccountStatus::Init, action: UserAction::Cancelled}),
-            ("[INIT,T2]".to_string(), Account{status: AccountStatus::Init, action: UserAction::T2}),
-            ("[FUNDED,NONE]".to_string(), Account{status: AccountStatus::Funded, action: UserAction::None}),
-            ("[FUNDED,APPROVED]".to_string(), Account{status: AccountStatus::Funded, action: UserAction::Approved}),
-            ("[FUNDED,CANCELLED]".to_string(), Account{status: AccountStatus::Funded, action: UserAction::Cancelled}),
-            ("[FUNDED,T2]".to_string(), Account{status: AccountStatus::Funded, action: UserAction::T2}),
-            ("[CLOSED,NONE]".to_string(), Account{status: AccountStatus::Closed, action: UserAction::None}),
-            ("[CLOSED,APPROVED]".to_string(), Account{status: AccountStatus::Closed, action: UserAction::Approved}),
-            ("[CLOSED,CANCELLED]".to_string(), Account{status: AccountStatus::Closed, action: UserAction::Cancelled}),
-            ("[CLOSED,T2]".to_string(), Account{status: AccountStatus::Closed, action: UserAction::T2}),
+            ("[INIT,NONE]".to_string(), Account{status: AccountStatus::Init, action: UserAction::None, lock: None}),
+            ("[INIT,APPROVED]".to_string(), Account{status: AccountStatus::Init, action: UserAction::Approved, lock: None}),
+            ("[INIT,CANCELLED]".to_string(), Account{status: AccountStatus::Init, action: UserAction::Cancelled, lock: None}),
+            ("[INIT,T2]".to_string(), Account{status: AccountStatus::Init, action: UserAction::T2, lock: None}),
+            ("[FUNDED,NONE]".to_string(), Account{status: AccountStatus::Funded, action: UserAction::None, lock: None}),
+            ("[FUNDED,APPROVED]".to_string(), Account{status: AccountStatus::Funded, action: UserAction::Approved, lock: None}),
+            ("[FUNDED,CANCELLED]".to_string(), Account{status: AccountStatus::Funded, action: UserAction::Cancelled, lock: None}),
+            ("[FUNDED,T2]".to_string(), Account{status: AccountStatus::Funded, action: UserAction::T2, lock: None}),
+            ("[CLOSED,NONE]".to_string(), Account{status: AccountStatus::Closed, action: UserAction::None, lock: None}),
+            ("[CLOSED,APPROVED]".to_string(), Account{status: AccountStatus::Closed, action: UserAction::Approved, lock: None}),
+            ("[CLOSED,CANCELLED]".to_string(), Account{status: AccountStatus::Closed, action: UserAction::Cancelled, lock:None}),
+            ("[CLOSED,T2]".to_string(), Account{status: AccountStatus::Closed, action: UserAction::T2, lock:None}),
         ]); 
     }
 
@@ -171,19 +221,50 @@ mod tests {
             assert!(matches!(err, AccountError::InvalidState{}));
             assert_eq!(tc.status, copy.status);
             assert_eq!(tc.action, copy.action);
+            assert_eq!(tc.lock, None);
         }
     }
 
     #[test]
-    fn account_approve() {
+    fn account_fund_setlock_approve_sequence() {
+        // happy case
+        let mut a = Account::new();
+        let _ = a.fund().unwrap();
+        let _ = a.set_lock(DUMMY_LOCK);
+        let _ = a.approve(DUMMY_SECRET_CORRECT);
+
+        // bad secret
+        let mut a = Account::new();
+        let _ = a.fund().unwrap();
+        let _ = a.set_lock(DUMMY_LOCK);
+        let err = a.approve(DUMMY_SECRET_INCORRECT).unwrap_err();
+        assert!(matches!(err, AccountError::InvalidSecret{}));
+    }
+
+    #[test]
+    fn account_approve_nolock() {
+        // try to approve when lock not set
+        let mut a = Account::new();
+        let _ = a.fund().unwrap();
+        // don't set lock
+        let err = a.approve(DUMMY_SECRET_INCORRECT).unwrap_err();
+        assert!(matches!(err, AccountError::InvalidState{}));
+    }
+
+    #[test]
+    fn account_approve_states() {
         let mut test_cases = all_states();
 
         for (key,tc) in test_cases.iter_mut() {
+            // prepare the test case with lock
+            tc.set_lock(DUMMY_LOCK);
+            
             // happy case
-            // calling ok() on an account that is in the [FUNDED, NONE] state should succeed
-            // and the account should end up in the [FUNDED, APPROVED] state
+            // calling approve, with the correct secret, on an account that is
+            // in the [FUNDED, NONE] state should succeed and the account should
+            // end up in the [FUNDED, APPROVED] state
            if key == "[FUNDED,NONE]" {
-            let _ = tc.approve().unwrap();
+            let _ = tc.approve(DUMMY_SECRET_CORRECT).unwrap();
             assert_eq!(tc.status, AccountStatus::Funded);
             assert_eq!(tc.action, UserAction::Approved);
             continue;
@@ -193,7 +274,7 @@ mod tests {
             // return a AccountError:InvalidState, and the account should remain in the same
             // state
             let copy = tc.clone();
-            let err = tc.approve().unwrap_err();
+            let err = tc.approve(DUMMY_SECRET_CORRECT).unwrap_err();
             assert!(matches!(err, AccountError::InvalidState{}));
             assert_eq!(tc.status, copy.status);
             assert_eq!(tc.action, copy.action);
