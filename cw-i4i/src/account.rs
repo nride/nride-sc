@@ -20,6 +20,7 @@ pub enum UserAction {
     None,
     Approved,
     Cancelled,
+    T1,
     T2,
 }
 #[derive(Serialize, Deserialize, Clone, PartialEq, JsonSchema, Debug)]
@@ -123,15 +124,26 @@ impl Account {
         }
     }
 
-    /// This triggers a state transition from [INIT|FUNDED, NONE]  to [INIT|FUNDED, T2]
-    /// if the account is in any state other than [INIT|FUNDED, NONE], the function returns 
+    /// This triggers a state transition from [INIT, NONE]  to [INIT, T1]
+    /// if the account is in any state other than [INIT, NONE], the function returns 
+    /// an AccountError::InvalidState
+    pub fn t1(&mut self) -> Result<(),AccountError> {
+        match (&self.status, &self.action) {
+            (AccountStatus::Init, UserAction::None) => {
+                self.action = UserAction::T1;
+                return Ok(());
+            }
+            _other => {
+                return Err(AccountError::InvalidState{});
+            },
+        }
+    }
+
+    /// This triggers a state transition from [FUNDED, NONE]  to [FUNDED, T2]
+    /// if the account is in any state other than [FUNDED, NONE], the function returns 
     /// an AccountError::InvalidState
     pub fn t2(&mut self) -> Result<(),AccountError> {
         match (&self.status, &self.action) {
-            (AccountStatus::Init, UserAction::None) => {
-                self.action = UserAction::T2;
-                return Ok(());
-            }
             (AccountStatus::Funded, UserAction::None) => {
                 self.action = UserAction::T2;
                 return Ok(());
@@ -152,6 +164,9 @@ impl Account {
                     UserAction::None => {
                         return Err(AccountError::InvalidState {  });
                     },
+                    UserAction::T1 => {
+                        return Err(AccountError::InvalidState {  });
+                    },
                     _other => {
                         self.status = AccountStatus::Closed;
                         return Ok(());
@@ -168,7 +183,7 @@ impl Account {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::collections::HashMap;
+    use std::{collections::HashMap, os::unix::prelude::PermissionsExt};
 
     static DUMMY_LOCK: &str = "04b4ac68eff3a82d86db5f0489d66f91707e99943bf796ae6a2dcb2205c9522fa7915428b5ac3d3b9291e62142e7246d85ad54504fabbdb2bae5795161f8ddf259";
     static DUMMY_SECRET_CORRECT: &str = "3c9229289a6125f7fdf1885a77bb12c37a8d3b4962d936f7e3084dece32a3ca1";
@@ -179,14 +194,17 @@ mod tests {
             ("[INIT,NONE]".to_string(), Account{status: AccountStatus::Init, action: UserAction::None, lock: None}),
             ("[INIT,APPROVED]".to_string(), Account{status: AccountStatus::Init, action: UserAction::Approved, lock: None}),
             ("[INIT,CANCELLED]".to_string(), Account{status: AccountStatus::Init, action: UserAction::Cancelled, lock: None}),
+            ("[INIT,T1]".to_string(), Account{status: AccountStatus::Init, action: UserAction::T1, lock: None}),
             ("[INIT,T2]".to_string(), Account{status: AccountStatus::Init, action: UserAction::T2, lock: None}),
             ("[FUNDED,NONE]".to_string(), Account{status: AccountStatus::Funded, action: UserAction::None, lock: None}),
             ("[FUNDED,APPROVED]".to_string(), Account{status: AccountStatus::Funded, action: UserAction::Approved, lock: None}),
             ("[FUNDED,CANCELLED]".to_string(), Account{status: AccountStatus::Funded, action: UserAction::Cancelled, lock: None}),
+            ("[FUNDED,T1]".to_string(), Account{status: AccountStatus::Funded, action: UserAction::T1, lock: None}),
             ("[FUNDED,T2]".to_string(), Account{status: AccountStatus::Funded, action: UserAction::T2, lock: None}),
             ("[CLOSED,NONE]".to_string(), Account{status: AccountStatus::Closed, action: UserAction::None, lock: None}),
             ("[CLOSED,APPROVED]".to_string(), Account{status: AccountStatus::Closed, action: UserAction::Approved, lock: None}),
             ("[CLOSED,CANCELLED]".to_string(), Account{status: AccountStatus::Closed, action: UserAction::Cancelled, lock:None}),
+            ("[CLOSED,T1]".to_string(), Account{status: AccountStatus::Closed, action: UserAction::T1, lock:None}),
             ("[CLOSED,T2]".to_string(), Account{status: AccountStatus::Closed, action: UserAction::T2, lock:None}),
         ]); 
     }
@@ -308,14 +326,41 @@ mod tests {
     }
 
     #[test]
+    fn account_t1() {
+        let mut test_cases = all_states();
+
+        for (key,tc) in test_cases.iter_mut() {
+            // happy case
+            // calling t1() on an account that is in the [INIT, NONE] state should succeed
+            // and the account should end up in the [INIT, T1] state
+           if key == "[INIT,NONE]" {
+            let copy = tc.clone();
+            let _ = tc.t1().unwrap();
+            assert_eq!(tc.status, copy.status);
+            assert_eq!(tc.action, UserAction::T1);
+            continue;
+           }
+
+            // calling t1() on an account that is in any state other than [INIT, NONE] should
+            // return a AccountError:InvalidState, and the account should remain in the same
+            // state
+            let copy = tc.clone();
+            let err = tc.t1().unwrap_err();
+            assert!(matches!(err, AccountError::InvalidState{}));
+            assert_eq!(tc.status, copy.status);
+            assert_eq!(tc.action, copy.action);
+        }
+    }
+
+    #[test]
     fn account_t2() {
         let mut test_cases = all_states();
 
         for (key,tc) in test_cases.iter_mut() {
             // happy case
-            // calling t2() on an account that is in the [INIT|FUNDED, NONE] state should succeed
-            // and the account should end up in the [INIT|FUNDED, T2] state
-           if key == "[INIT,NONE]" || key == "[FUNDED,NONE]" {
+            // calling t2() on an account that is in the [FUNDED, NONE] state should succeed
+            // and the account should end up in the [FUNDED, T2] state
+           if key == "[FUNDED,NONE]" {
             let copy = tc.clone();
             let _ = tc.t2().unwrap();
             assert_eq!(tc.status, copy.status);
@@ -323,7 +368,7 @@ mod tests {
             continue;
            }
 
-            // calling t2() on an account that is in any state other than [INIT|FUNDED, NONE] should
+            // calling t2() on an account that is in any state other than [FUNDED, NONE] should
             // return a AccountError:InvalidState, and the account should remain in the same
             // state
             let copy = tc.clone();
@@ -361,5 +406,25 @@ mod tests {
             assert_eq!(tc.status, copy.status);
             assert_eq!(tc.action, copy.action);
         }
+    }
+
+    #[test]
+    fn gen_key() {
+
+        let secret =    "cde73ee8f8584c54ac455c941f75990f4bff47a4340023e3fd236344e9a7d4ea";
+        let private_key = hex::decode(secret).unwrap();
+
+        let recomputed_public_key = SigningKey::from_bytes(&private_key)
+        .unwrap()
+        .verifying_key()
+        .to_encoded_point(false)
+        .as_bytes()
+        .to_vec();
+
+        let recomputed_public_key_str = hex::encode(recomputed_public_key);
+
+        println!("{}", recomputed_public_key_str);
+
+        // 042d5f7beb52d336163483804facb17c47033fb14dfc3f3c88235141bae1896fc8d99a685aafaf92d5f41d866fe387b988a998590326f1b549878b9d03eabed7e5
     }
 }
