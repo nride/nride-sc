@@ -8,4 +8,6 @@ pub use crate::error::ContractError;
 
 mod account;
 mod escrow;
-mod state_new;
+mod new_state;
+mod new_msg;
+mod new_contract;

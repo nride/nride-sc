@@ -9,6 +9,9 @@ pub enum ContractError {
     #[error("Unauthorized")]
     Unauthorized {},
 
+    #[error("Invalid state")]
+    InvalidState (AccountError),
+
     #[error("Only accepts tokens in the cw20_whitelist")]
     NotInWhitelist {},
 
