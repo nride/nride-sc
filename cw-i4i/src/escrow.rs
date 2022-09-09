@@ -1,7 +1,10 @@
+use schemars::JsonSchema;
+use serde::{Deserialize, Serialize};
+
 use cosmwasm_std::{Addr, StdError };
 use cw20::{Balance};
 
-use crate::{account::{Account, UserAction, AccountStatus}, error::AccountError};
+use crate::{account::{Account, UserAction}, error::AccountError};
 
 #[derive(Clone, PartialEq,Debug)]
 pub struct WithdrawResult {
@@ -9,7 +12,7 @@ pub struct WithdrawResult {
     user_b_basis_points: u8,
 }
 
-#[derive(Clone, PartialEq, Debug)]
+#[derive(Serialize, Deserialize, JsonSchema, Clone, PartialEq, Debug)]
 pub struct Escrow {
     /// user_a creates the escrow
     pub user_a: Addr,

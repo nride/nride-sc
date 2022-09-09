@@ -183,7 +183,7 @@ impl Account {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::{collections::HashMap, os::unix::prelude::PermissionsExt};
+    use std::{collections::HashMap};
 
     static DUMMY_LOCK: &str = "04b4ac68eff3a82d86db5f0489d66f91707e99943bf796ae6a2dcb2205c9522fa7915428b5ac3d3b9291e62142e7246d85ad54504fabbdb2bae5795161f8ddf259";
     static DUMMY_SECRET_CORRECT: &str = "3c9229289a6125f7fdf1885a77bb12c37a8d3b4962d936f7e3084dece32a3ca1";
