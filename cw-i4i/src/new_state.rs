@@ -17,7 +17,8 @@ pub fn all_escrow_ids(storage: &dyn Storage) -> StdResult<Vec<String>> {
 mod tests {
     use super::*;
 
-    use cosmwasm_std::{Addr, Uint128} ;    
+    use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info};
+    use cosmwasm_std::{Addr, Uint128, Timestamp} ;    
     use cw20::{Balance, Cw20CoinVerified};
     use cosmwasm_std::testing::MockStorage;
 
@@ -33,13 +34,17 @@ mod tests {
             address: Addr::unchecked("coin_address"),
             amount: Uint128::new(100),
         };
+        let mut env = mock_env();
+        env.block.time = Timestamp::from_seconds(1);
         let e = Escrow::create(
+            &env,
             Addr::unchecked("user_a"),
             Addr::unchecked("user_b"),
-            123,
+            1000,
+            2000,
             Balance::Cw20(coin),
         );
-        return e;
+        return e.unwrap();
     }
 
     #[test]

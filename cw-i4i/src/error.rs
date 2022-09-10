@@ -12,6 +12,9 @@ pub enum ContractError {
     #[error("Invalid state")]
     InvalidState (AccountError),
 
+    #[error("Invalid deposit")]
+    InvalidDeposit (),
+
     #[error("Only accepts tokens in the cw20_whitelist")]
     NotInWhitelist {},
 
@@ -27,6 +30,13 @@ pub enum ContractError {
     #[error("Recipient is not set")]
     RecipientNotSet {},
 }
+
+#[derive(Error, Debug, PartialEq)]
+pub enum EscrowError {
+    #[error("Invalid timeouts")]
+    InvalidTimeouts,
+}
+
 
 #[derive(Error, Debug, PartialEq)]
 pub enum AccountError {

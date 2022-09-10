@@ -1,3 +1,5 @@
+use std;
+
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
@@ -15,6 +17,16 @@ pub enum AccountStatus {
     Closed,
 }
 
+impl std::fmt::Display for AccountStatus {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        match self {
+            AccountStatus::Init => write!(f, "INIT"),
+            AccountStatus::Funded => write!(f, "FUNDED"),
+            AccountStatus::Closed => write!(f, "CLOSED"),
+        }
+    }
+}
+
 #[derive(Serialize, Deserialize, Clone, PartialEq, JsonSchema, Debug)]
 pub enum UserAction {
     None,
@@ -23,6 +35,19 @@ pub enum UserAction {
     T1,
     T2,
 }
+
+impl std::fmt::Display for UserAction {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        match self {
+            UserAction::None => write!(f, "NONE"),
+            UserAction::Approved => write!(f, "APPROVED"),
+            UserAction::Cancelled => write!(f, "CANCELLED"),
+            UserAction::T1 => write!(f, "T1"),
+            UserAction::T2 => write!(f, "T2"),
+        }
+    }
+}
+
 #[derive(Serialize, Deserialize, Clone, PartialEq, JsonSchema, Debug)]
 pub struct Account {
     pub status: AccountStatus,
@@ -177,6 +202,12 @@ impl Account {
                 return Err(AccountError::InvalidState{});
             },
         }
+    }
+}
+
+impl std::fmt::Display for Account {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "[{}|{}]", self.status, self.action)
     }
 }
 
