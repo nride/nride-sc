@@ -10,7 +10,7 @@ use cw20::{Balance, Cw20Coin, Cw20CoinVerified, Cw20ExecuteMsg, Cw20ReceiveMsg};
 
 use crate::error::ContractError;
 use crate::new_msg::{
-    CreateMsg, ExecuteMsg, InstantiateMsg, ReceiveMsg, QueryMsg, ListResponse, DetailsResponse, TopUpMsg,
+    CreateMsg, ExecuteMsg, InstantiateMsg, ReceiveMsg, QueryMsg, ListResponse, DetailsResponse, TopUpMsg, ApproveMsg,
 };
 
 use crate::escrow::Escrow;
@@ -47,6 +47,9 @@ pub fn execute(
         ExecuteMsg::TopUp(msg) => {
             execute_topup(deps, env, msg, Balance::from(info.funds), &info.sender)
         }
+        ExecuteMsg::Approve(msg) => {
+            execute_approve(deps, env, msg, &info.sender)
+        }
         ExecuteMsg::Receive(msg) => execute_receive(deps, env, info, msg),
     }
 }
@@ -69,7 +72,10 @@ pub fn execute_receive(
         },
         ReceiveMsg::TopUp(msg) => {
             execute_topup(deps, env, msg, balance, &api.addr_validate(&wrapper.sender)?)
-        }
+        },
+        ReceiveMsg::Approve(msg) => {
+            execute_approve(deps, env, msg, &api.addr_validate(&wrapper.sender)?)
+        },
     }
 }
 
@@ -147,6 +153,27 @@ pub fn execute_topup(
     Ok(res)
 }
 
+pub fn execute_approve(
+    deps: DepsMut,
+    env: Env,
+    msg: ApproveMsg,
+    sender: &Addr,
+) -> Result<Response, ContractError> {
+    // this fails is no escrow there
+    let mut escrow = ESCROWS.load(deps.storage, &msg.id)?;
+
+    let approve_res = escrow.approve(env, sender.clone(), &msg.secret);
+    if approve_res.is_err() {
+        return Err(ContractError::InvalidState(approve_res.unwrap_err()));
+    }
+
+    // and save
+    ESCROWS.save(deps.storage, &msg.id, &escrow)?;
+
+    let res = Response::new().add_attributes(vec![("action", "top_up"), ("id", msg.id.as_str())]);
+    Ok(res)
+}
+
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
@@ -189,13 +216,18 @@ mod tests {
 
      const ESCROW_ID: &str ="foobar";
      const USER_A_ADDR: &str= "user_a";
-     const LOCK_A: &str = "xxxxxx";
+     const  LOCK_A: &str = "04b4ac68eff3a82d86db5f0489d66f91707e99943bf796ae6a2dcb2205c9522fa7915428b5ac3d3b9291e62142e7246d85ad54504fabbdb2bae5795161f8ddf259";
+     const  SECRET_A: &str =  "3c9229289a6125f7fdf1885a77bb12c37a8d3b4962d936f7e3084dece32a3ca1";   
      const USER_B_ADDR : &str = "user_b";
-     const LOCK_B : &str= "yyyyyy";
+     const LOCK_B: &str = "042d5f7beb52d336163483804facb17c47033fb14dfc3f3c88235141bae1896fc8d99a685aafaf92d5f41d866fe387b988a998590326f1b549878b9d03eabed7e5";
+     const SECRET_B: &str =  "cde73ee8f8584c54ac455c941f75990f4bff47a4340023e3fd236344e9a7d4ea";  
      const T1_TIMEOUT: u64 = 1000000;
      const T2_TIMEOUT: u64 = 4000000;
      const REQUIRED_TOKEN_ADDR: &str = "the_cw20_token";
      const REQUIRED_TOKEN_AMOUNT: u128 =  100;
+
+
+ 
 
     fn get_mock_env(timestamp: u64) -> Env {
         let mut env = mock_env();
@@ -256,6 +288,28 @@ mod tests {
         let info = mock_info(&deposit_token_addr, &[]);
         let msg = ExecuteMsg::Receive(receive.clone());
         return (info, msg);
+    }
+
+    fn get_approve_msg(
+        sender_addr: String,
+        escrow_id: String,
+        secret: String,
+        deposit_token_addr: String,
+        deposit_token_amount: u128,
+    ) -> (MessageInfo, ExecuteMsg) {
+        
+        let approve = ApproveMsg{
+            id: escrow_id,
+            secret: secret,
+        };
+        let receive = Cw20ReceiveMsg {
+            sender: sender_addr,
+            amount: Uint128::new(deposit_token_amount),
+            msg: to_binary(&ExecuteMsg::Approve(approve.clone())).unwrap(),
+        };
+        let info = mock_info(&deposit_token_addr,  &[]);
+        let msg = ExecuteMsg::Receive(receive.clone());
+            return (info, msg);
     }
 
     #[test]
@@ -329,6 +383,76 @@ mod tests {
                 account_a_lock: Some(LOCK_B.to_string()),
                 user_b: USER_B_ADDR.to_string(),
                 account_b_state: "[FUNDED|NONE]".to_string(),
+                account_b_lock: Some(LOCK_A.to_string()),
+                t1_timeout: T1_TIMEOUT,
+                t2_timeout: T2_TIMEOUT,
+                required_deposit: Balance::Cw20(
+                    Cw20CoinVerified{
+                        address:Addr::unchecked(REQUIRED_TOKEN_ADDR),
+                        amount: Uint128::new(REQUIRED_TOKEN_AMOUNT),
+                    },
+                ),
+            }
+        );
+
+        // user_a approves
+        let (info, approve_msg) = get_approve_msg(
+            USER_A_ADDR.to_string(),
+            ESCROW_ID.to_string(),
+            SECRET_B.to_string(),
+            REQUIRED_TOKEN_ADDR.to_string(),
+            0,
+        );  
+        let res = execute(deps.as_mut(), get_mock_env(3), info, approve_msg).unwrap();
+        assert_eq!(0, res.messages.len());
+        assert_eq!(("action", "top_up"), res.attributes[0]);
+
+        // ensure the escrow is what we expect
+        let details = query_details(deps.as_ref(), ESCROW_ID.to_string()).unwrap();
+        assert_eq!(
+            details,
+            DetailsResponse {
+                id: ESCROW_ID.to_string(),
+                user_a: USER_A_ADDR.to_string(),
+                account_a_state: "[FUNDED|APPROVED]".to_string(),
+                account_a_lock: Some(LOCK_B.to_string()),
+                user_b: USER_B_ADDR.to_string(),
+                account_b_state: "[FUNDED|NONE]".to_string(),
+                account_b_lock: Some(LOCK_A.to_string()),
+                t1_timeout: T1_TIMEOUT,
+                t2_timeout: T2_TIMEOUT,
+                required_deposit: Balance::Cw20(
+                    Cw20CoinVerified{
+                        address:Addr::unchecked(REQUIRED_TOKEN_ADDR),
+                        amount: Uint128::new(REQUIRED_TOKEN_AMOUNT),
+                    },
+                ),
+            }
+        );
+
+        // user_b approves
+        let (info, approve_msg) = get_approve_msg(
+            USER_B_ADDR.to_string(),
+            ESCROW_ID.to_string(),
+            SECRET_A.to_string(),
+            REQUIRED_TOKEN_ADDR.to_string(),
+            0,
+        );  
+        let res = execute(deps.as_mut(), get_mock_env(4), info, approve_msg).unwrap();
+        assert_eq!(0, res.messages.len());
+        assert_eq!(("action", "top_up"), res.attributes[0]);
+
+        // ensure the escrow is what we expect
+        let details = query_details(deps.as_ref(), ESCROW_ID.to_string()).unwrap();
+        assert_eq!(
+            details,
+            DetailsResponse {
+                id: ESCROW_ID.to_string(),
+                user_a: USER_A_ADDR.to_string(),
+                account_a_state: "[FUNDED|APPROVED]".to_string(),
+                account_a_lock: Some(LOCK_B.to_string()),
+                user_b: USER_B_ADDR.to_string(),
+                account_b_state: "[FUNDED|APPROVED]".to_string(),
                 account_b_lock: Some(LOCK_A.to_string()),
                 t1_timeout: T1_TIMEOUT,
                 t2_timeout: T2_TIMEOUT,

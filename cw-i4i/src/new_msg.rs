@@ -11,6 +11,7 @@ pub struct InstantiateMsg {}
 pub enum ExecuteMsg {
     Create(CreateMsg),
     TopUp(TopUpMsg),
+    Approve(ApproveMsg),
     /// This accepts a properly-encoded ReceiveMsg from a cw20 contract
     Receive(Cw20ReceiveMsg),
 }
@@ -20,6 +21,7 @@ pub enum ExecuteMsg {
 pub enum ReceiveMsg {
     Create(CreateMsg),
     TopUp(TopUpMsg),
+    Approve(ApproveMsg),
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
@@ -37,6 +39,12 @@ pub struct CreateMsg {
 pub struct TopUpMsg {
     pub id: String,
     pub account_a_lock: String,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+pub struct ApproveMsg {
+    pub id: String,
+    pub secret: String,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
