@@ -12,6 +12,7 @@ pub enum ExecuteMsg {
     Create(CreateMsg),
     TopUp(TopUpMsg),
     Approve(ApproveMsg),
+    Cancel {id: String},
     /// This accepts a properly-encoded ReceiveMsg from a cw20 contract
     Receive(Cw20ReceiveMsg),
 }
@@ -22,6 +23,7 @@ pub enum ReceiveMsg {
     Create(CreateMsg),
     TopUp(TopUpMsg),
     Approve(ApproveMsg),
+    Cancel{id:String},
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]

@@ -50,6 +50,9 @@ pub fn execute(
         ExecuteMsg::Approve(msg) => {
             execute_approve(deps, env, msg, &info.sender)
         }
+        ExecuteMsg::Cancel{id} => {
+            execute_cancel(deps, env, id, &info.sender)
+        }
         ExecuteMsg::Receive(msg) => execute_receive(deps, env, info, msg),
     }
 }
@@ -76,6 +79,9 @@ pub fn execute_receive(
         ReceiveMsg::Approve(msg) => {
             execute_approve(deps, env, msg, &api.addr_validate(&wrapper.sender)?)
         },
+        ReceiveMsg::Cancel{id} => {
+            execute_cancel(deps, env, id, &api.addr_validate(&wrapper.sender)?)
+        }
     }
 }
 
@@ -171,6 +177,27 @@ pub fn execute_approve(
     ESCROWS.save(deps.storage, &msg.id, &escrow)?;
 
     let res = Response::new().add_attributes(vec![("action", "top_up"), ("id", msg.id.as_str())]);
+    Ok(res)
+}
+
+pub fn execute_cancel(
+    deps: DepsMut,
+    env: Env,
+    id: String,
+    sender: &Addr,
+) -> Result<Response, ContractError> {
+    // this fails is no escrow there
+    let mut escrow = ESCROWS.load(deps.storage, &id)?;
+
+    let cancel_res = escrow.cancel(env, sender.clone());
+    if cancel_res.is_err() {
+        return Err(ContractError::InvalidState(cancel_res.unwrap_err()));
+    }
+
+    // and save
+    ESCROWS.save(deps.storage, &id, &escrow)?;
+
+    let res = Response::new().add_attributes(vec![("action", "top_up"), ("id", id.as_str())]);
     Ok(res)
 }
 
