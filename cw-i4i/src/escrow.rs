@@ -400,6 +400,10 @@ mod tests {
     fn get_cases() -> Vec<TestCase> {
         let res = vec![
             TestCase{
+                // both users fund the account before T1
+                // both users approve other's account before T2
+                // call withdraw AFTER these events (it is irrelevant whether it is before or after the timeouts, so long as it
+                // is after the approvals)
                 name: "(APPROVED, APPROVED)".to_string(),
                 expected: Ok(WithdrawResult{user_a_basis_points:100, user_b_basis_points:100}),
                 init:  || {
@@ -413,6 +417,10 @@ mod tests {
                 withdraw_timestamp: DUMMY_T2 -10,
             },
             TestCase{
+                // both users fund their accounts before T1
+                // user_a approves before T2
+                // user_b cancels before T2
+                // withdraw after user actions
                 name: "(APPROVED, CANCELLED)".to_string(),
                 expected: Ok(WithdrawResult{user_a_basis_points:130, user_b_basis_points:70}),
                 init:  || {
@@ -426,6 +434,10 @@ mod tests {
                 withdraw_timestamp: DUMMY_T2 - 10,
             },
             TestCase{
+                // both users fund before T1
+                // user_a approves before T2
+                // user_b does nothing
+                // call withdraw after T2 -> account_b should transition to T2
                 name: "(APPROVED, T2)".to_string(),
                 expected: Ok(WithdrawResult{user_a_basis_points:150, user_b_basis_points:50}),
                 init:  || {
@@ -438,6 +450,9 @@ mod tests {
                 withdraw_timestamp: DUMMY_T2 + 10,
             },
             TestCase{
+                // both users fund before T1
+                // user_a cancels before T2
+                // user_b approves before T2
                 name: "(CANCELLED, APPROVED)".to_string(),
                 expected: Ok(WithdrawResult{user_a_basis_points:70, user_b_basis_points:130}),
                 init:  || {
@@ -451,6 +466,8 @@ mod tests {
                 withdraw_timestamp: DUMMY_T2 - 10,
             },
             TestCase{
+                // both users fund before T1
+                // both users cancel before T2
                 name: "(CANCELLED, CANCELLED)".to_string(),
                 expected: Ok(WithdrawResult{user_a_basis_points:50, user_b_basis_points:50}),
                 init:  || {
@@ -464,6 +481,9 @@ mod tests {
                 withdraw_timestamp: DUMMY_T2 - 10,
             },
             TestCase{
+                // user_a funds before T1
+                // user_b tries to fund after T1
+                // user_a cancels before T2
                 name: "(CANCELLED, T1)".to_string(),
                 expected: Ok(WithdrawResult{user_a_basis_points:100, user_b_basis_points:0}),
                 init:  || {
@@ -476,6 +496,10 @@ mod tests {
                 withdraw_timestamp: DUMMY_T2,
             },
             TestCase{
+                // both users fund before T1
+                // user_a cancels before T2
+                // user_b does nothing
+                // call withdraw after T2 -> account_b should transition to T2
                 name: "(CANCELLED, T2)".to_string(),
                 expected: Ok(WithdrawResult{user_a_basis_points:50, user_b_basis_points:0}),
                 init:  || {
@@ -488,6 +512,9 @@ mod tests {
                 withdraw_timestamp: DUMMY_T2 + 10,
             },
             TestCase{
+                // user_b funds before T1
+                // user_a tries to fund after T1
+                // user_b cancels before T2
                 name: "(T1, CANCELLED)".to_string(),
                 expected: Ok(WithdrawResult{user_a_basis_points:0, user_b_basis_points:100}),
                 init:  || {
@@ -500,15 +527,21 @@ mod tests {
                 withdraw_timestamp: DUMMY_T2,
             },
             TestCase{
+                // both users do not fund before T1
+                // withdrawing after T1 causes both accounts to transition to T1
                 name: "(T1, T1)".to_string(),
                 expected: Ok(WithdrawResult{user_a_basis_points:0, user_b_basis_points:0}),
                 init:  || {
-                    let mut escrow = dummy_escrow(1).unwrap();
+                    let escrow = dummy_escrow(1).unwrap();
                     return escrow;
                 },
                 withdraw_timestamp: DUMMY_T1 + 10,
             },
             TestCase{
+                // user_b funds before T1
+                // user_a tries to fund after T1, causing it to transition to T1
+                // neither user does anything before T2
+                // calling withdraw after T2 causes account_b to transition to T2
                 name: "(T1, T2)".to_string(),
                 expected: Ok(WithdrawResult{user_a_basis_points:0, user_b_basis_points:100}),
                 init:  || {
@@ -520,6 +553,10 @@ mod tests {
                 withdraw_timestamp: DUMMY_T2 + 10,
             },
             TestCase{
+                // both users fund before T1
+                // user_b approves before T2
+                // user_a does nothing before T2
+                // calling withdraw after T2 causes account_a to transition to T2
                 name: "(T2, APPROVED)".to_string(),
                 expected: Ok(WithdrawResult{user_a_basis_points:50, user_b_basis_points:150}),
                 init:  || {
@@ -532,6 +569,10 @@ mod tests {
                 withdraw_timestamp: DUMMY_T2 + 10,
             },
             TestCase{
+                // both users fund before T1
+                // user_b cancels before T2
+                // user_a does nothing before T2
+                // calling withdraw after T2 causes account_a to transition to T2
                 name: "(T2, CANCELLED)".to_string(),
                 expected: Ok(WithdrawResult{user_a_basis_points:0, user_b_basis_points:50}),
                 init:  || {
@@ -544,6 +585,10 @@ mod tests {
                 withdraw_timestamp: DUMMY_T2 + 10,
             },
             TestCase{
+                // user_a funds before T1
+                // user_a does nothing before T2
+                // user_b does nothing at all
+                // calling withdraw after T2 causes account_a to transition to T2, and account_b to T1
                 name: "(T2, T1)".to_string(),
                 expected: Ok(WithdrawResult{user_a_basis_points:100, user_b_basis_points:0}),
                 init:  || {
@@ -554,6 +599,9 @@ mod tests {
                 withdraw_timestamp: DUMMY_T2 + 10,
             },
             TestCase{
+                // both users fund before T1
+                // neither user does anything before T2
+                // calling withdraw after T2 causes both accounts to transition to T2
                 name: "(T2, T2)".to_string(),
                 expected: Ok(WithdrawResult{user_a_basis_points:0, user_b_basis_points:0}),
                 init:  || {
