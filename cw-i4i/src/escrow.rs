@@ -9,8 +9,8 @@ use crate::{account::{Account, UserAction}, error::{AccountError, EscrowError}};
 
 #[derive(Clone, PartialEq,Debug)]
 pub struct WithdrawResult {
-    user_a_basis_points: u8,
-    user_b_basis_points: u8,
+    pub user_a_basis_points: u8,
+    pub user_b_basis_points: u8,
 }
 
 #[derive(Serialize, Deserialize, JsonSchema, Clone, PartialEq, Debug)]

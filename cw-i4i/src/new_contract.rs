@@ -1,4 +1,6 @@
 #[cfg(not(feature = "library"))]
+use std::convert::{From, TryFrom};
+
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
     from_binary, to_binary, Addr, BankMsg, Binary, Deps, DepsMut, Env, MessageInfo, Response,
@@ -13,7 +15,7 @@ use crate::new_msg::{
     CreateMsg, ExecuteMsg, InstantiateMsg, ReceiveMsg, QueryMsg, ListResponse, DetailsResponse, TopUpMsg, ApproveMsg,
 };
 
-use crate::escrow::Escrow;
+use crate::escrow::{Escrow, WithdrawResult};
 use crate::new_state::{all_escrow_ids, ESCROWS};
 
 // version info for migration info
@@ -53,6 +55,9 @@ pub fn execute(
         ExecuteMsg::Cancel{id} => {
             execute_cancel(deps, env, id, &info.sender)
         }
+        ExecuteMsg::Withdraw { id } => {
+            execute_withdraw(deps, env, id)
+        }
         ExecuteMsg::Receive(msg) => execute_receive(deps, env, info, msg),
     }
 }
@@ -81,6 +86,9 @@ pub fn execute_receive(
         },
         ReceiveMsg::Cancel{id} => {
             execute_cancel(deps, env, id, &api.addr_validate(&wrapper.sender)?)
+        },
+        ReceiveMsg::Withdraw{id} => {
+            execute_withdraw(deps, env, id)
         }
     }
 }
@@ -176,7 +184,7 @@ pub fn execute_approve(
     // and save
     ESCROWS.save(deps.storage, &msg.id, &escrow)?;
 
-    let res = Response::new().add_attributes(vec![("action", "top_up"), ("id", msg.id.as_str())]);
+    let res = Response::new().add_attributes(vec![("action", "approve"), ("id", msg.id.as_str())]);
     Ok(res)
 }
 
@@ -197,8 +205,66 @@ pub fn execute_cancel(
     // and save
     ESCROWS.save(deps.storage, &id, &escrow)?;
 
-    let res = Response::new().add_attributes(vec![("action", "top_up"), ("id", id.as_str())]);
+    let res = Response::new().add_attributes(vec![("action", "cancel"), ("id", id.as_str())]);
     Ok(res)
+}
+
+pub fn execute_withdraw(
+    deps: DepsMut,
+    env: Env,
+    id: String,
+) -> Result<Response, ContractError> {
+    // this fails is no escrow there
+    let mut escrow = ESCROWS.load(deps.storage, &id)?;
+
+    let coeffs = escrow.withdraw(env).unwrap();
+
+    let payments = create_payment_submsgs(&coeffs, escrow).unwrap();
+    
+    let res = Response::new().add_attributes(vec![
+        ("action", "withdraw"),
+            ("id", id.as_str()),
+            ("res", format!("({},{})", &coeffs.user_a_basis_points, coeffs.user_b_basis_points).as_str()), 
+            ])
+        .add_submessages(payments);
+        
+        Ok(res)
+}
+
+pub fn create_payment_submsgs(coeffs: &WithdrawResult, escrow: Escrow) -> StdResult<Vec<SubMsg>> {
+    let mut msgs: Vec<SubMsg> = vec![];
+    if let Balance::Cw20(token) = escrow.required_deposit {
+        let user_a_payoff_msg = Cw20ExecuteMsg::Transfer {
+            recipient: escrow.user_a.to_string(),
+            amount:  token.amount.multiply_ratio(
+                coeffs.user_a_basis_points as u128,
+                100 as u128,
+            ),
+        };
+        let user_a_exec = SubMsg::new(WasmMsg::Execute {
+            contract_addr: token.address.to_string(),
+            msg: to_binary(&user_a_payoff_msg)?,
+            funds: vec![],
+        });
+        msgs.push(user_a_exec);
+
+        let user_b_payoff_msg = Cw20ExecuteMsg::Transfer {
+            recipient: escrow.user_b.to_string(),
+            amount:  token.amount.multiply_ratio(
+                coeffs.user_b_basis_points as u128,
+                100 as u128,
+            ),
+        };
+        let user_b_exec = SubMsg::new(WasmMsg::Execute {
+            contract_addr: token.address.to_string(),
+            msg: to_binary(&user_b_payoff_msg)?,
+            funds: vec![],
+        });
+        msgs.push(user_b_exec);
+    } else {
+        return Err(StdError::GenericErr { msg: "native tokens not supported".to_string() });
+    }
+    Ok(msgs)
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
@@ -241,20 +307,17 @@ mod tests {
 
     use super::*;
 
-     const ESCROW_ID: &str ="foobar";
-     const USER_A_ADDR: &str= "user_a";
-     const  LOCK_A: &str = "04b4ac68eff3a82d86db5f0489d66f91707e99943bf796ae6a2dcb2205c9522fa7915428b5ac3d3b9291e62142e7246d85ad54504fabbdb2bae5795161f8ddf259";
-     const  SECRET_A: &str =  "3c9229289a6125f7fdf1885a77bb12c37a8d3b4962d936f7e3084dece32a3ca1";   
-     const USER_B_ADDR : &str = "user_b";
-     const LOCK_B: &str = "042d5f7beb52d336163483804facb17c47033fb14dfc3f3c88235141bae1896fc8d99a685aafaf92d5f41d866fe387b988a998590326f1b549878b9d03eabed7e5";
-     const SECRET_B: &str =  "cde73ee8f8584c54ac455c941f75990f4bff47a4340023e3fd236344e9a7d4ea";  
-     const T1_TIMEOUT: u64 = 1000000;
-     const T2_TIMEOUT: u64 = 4000000;
-     const REQUIRED_TOKEN_ADDR: &str = "the_cw20_token";
-     const REQUIRED_TOKEN_AMOUNT: u128 =  100;
-
-
- 
+    const ESCROW_ID: &str ="foobar";
+    const USER_A_ADDR: &str= "user_a";
+    const  LOCK_A: &str = "04b4ac68eff3a82d86db5f0489d66f91707e99943bf796ae6a2dcb2205c9522fa7915428b5ac3d3b9291e62142e7246d85ad54504fabbdb2bae5795161f8ddf259";
+    const  SECRET_A: &str =  "3c9229289a6125f7fdf1885a77bb12c37a8d3b4962d936f7e3084dece32a3ca1";   
+    const USER_B_ADDR : &str = "user_b";
+    const LOCK_B: &str = "042d5f7beb52d336163483804facb17c47033fb14dfc3f3c88235141bae1896fc8d99a685aafaf92d5f41d866fe387b988a998590326f1b549878b9d03eabed7e5";
+    const SECRET_B: &str =  "cde73ee8f8584c54ac455c941f75990f4bff47a4340023e3fd236344e9a7d4ea";  
+    const T1_TIMEOUT: u64 = 1000000;
+    const T2_TIMEOUT: u64 = 4000000;
+    const REQUIRED_TOKEN_ADDR: &str = "the_cw20_token";
+    const REQUIRED_TOKEN_AMOUNT: u128 =  100;
 
     fn get_mock_env(timestamp: u64) -> Env {
         let mut env = mock_env();
@@ -333,6 +396,22 @@ mod tests {
             sender: sender_addr,
             amount: Uint128::new(deposit_token_amount),
             msg: to_binary(&ExecuteMsg::Approve(approve.clone())).unwrap(),
+        };
+        let info = mock_info(&deposit_token_addr,  &[]);
+        let msg = ExecuteMsg::Receive(receive.clone());
+            return (info, msg);
+    }
+
+    fn get_withdraw_msg(
+        sender_addr: String,
+        escrow_id: String,
+        deposit_token_addr: String,
+    ) -> (MessageInfo, ExecuteMsg) {
+        
+        let receive = Cw20ReceiveMsg {
+            sender: sender_addr,
+            amount: Uint128::new(0),
+            msg: to_binary(&ReceiveMsg::Withdraw{id:escrow_id}).unwrap(),
         };
         let info = mock_info(&deposit_token_addr,  &[]);
         let msg = ExecuteMsg::Receive(receive.clone());
@@ -432,7 +511,7 @@ mod tests {
         );  
         let res = execute(deps.as_mut(), get_mock_env(3), info, approve_msg).unwrap();
         assert_eq!(0, res.messages.len());
-        assert_eq!(("action", "top_up"), res.attributes[0]);
+        assert_eq!(("action", "approve"), res.attributes[0]);
 
         // ensure the escrow is what we expect
         let details = query_details(deps.as_ref(), ESCROW_ID.to_string()).unwrap();
@@ -467,7 +546,7 @@ mod tests {
         );  
         let res = execute(deps.as_mut(), get_mock_env(4), info, approve_msg).unwrap();
         assert_eq!(0, res.messages.len());
-        assert_eq!(("action", "top_up"), res.attributes[0]);
+        assert_eq!(("action", "approve"), res.attributes[0]);
 
         // ensure the escrow is what we expect
         let details = query_details(deps.as_ref(), ESCROW_ID.to_string()).unwrap();
@@ -491,6 +570,16 @@ mod tests {
                 ),
             }
         );
+
+        let (info, withdraw_msg) = get_withdraw_msg(
+            USER_A_ADDR.to_string(),
+            ESCROW_ID.to_string(),
+            REQUIRED_TOKEN_ADDR.to_string(),
+        );  
+        let res = execute(deps.as_mut(), get_mock_env(4), info, withdraw_msg).unwrap();
+        assert_eq!(2, res.messages.len());
+        assert_eq!(("action", "withdraw"), res.attributes[0]);
+        assert_eq!(("res", "(100,100)"), res.attributes[2]);
     }
 
     #[test]
