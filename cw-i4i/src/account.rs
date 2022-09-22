@@ -14,7 +14,6 @@ use crate::error::AccountError;
 pub enum AccountStatus {
     Init,
     Funded,
-    Closed,
 }
 
 impl std::fmt::Display for AccountStatus {
@@ -22,7 +21,6 @@ impl std::fmt::Display for AccountStatus {
         match self {
             AccountStatus::Init => write!(f, "INIT"),
             AccountStatus::Funded => write!(f, "FUNDED"),
-            AccountStatus::Closed => write!(f, "CLOSED"),
         }
     }
 }
@@ -178,31 +176,6 @@ impl Account {
             },
         }
     }
-
-    /// This triggers a state transition from [FUNDED, APPROVED|CANCELLED|T2]  to [CLOSED, APPROVED|CANCELLED|T2]
-    /// if the account is in any state other than [FUNDED, APPROVED|CANCELLED|T2], the function returns 
-    /// an AccountError::InvalidState
-    pub fn close(&mut self) -> Result<(),AccountError> {
-        match &self.status {
-            AccountStatus::Funded => {
-                match &self.action {
-                    UserAction::None => {
-                        return Err(AccountError::InvalidState {  });
-                    },
-                    UserAction::T1 => {
-                        return Err(AccountError::InvalidState {  });
-                    },
-                    _other => {
-                        self.status = AccountStatus::Closed;
-                        return Ok(());
-                    },
-                };
-            },
-            _other => {
-                return Err(AccountError::InvalidState{});
-            },
-        }
-    }
 }
 
 impl std::fmt::Display for Account {
@@ -232,11 +205,6 @@ mod tests {
             ("[FUNDED,CANCELLED]".to_string(), Account{status: AccountStatus::Funded, action: UserAction::Cancelled, lock: None}),
             ("[FUNDED,T1]".to_string(), Account{status: AccountStatus::Funded, action: UserAction::T1, lock: None}),
             ("[FUNDED,T2]".to_string(), Account{status: AccountStatus::Funded, action: UserAction::T2, lock: None}),
-            ("[CLOSED,NONE]".to_string(), Account{status: AccountStatus::Closed, action: UserAction::None, lock: None}),
-            ("[CLOSED,APPROVED]".to_string(), Account{status: AccountStatus::Closed, action: UserAction::Approved, lock: None}),
-            ("[CLOSED,CANCELLED]".to_string(), Account{status: AccountStatus::Closed, action: UserAction::Cancelled, lock:None}),
-            ("[CLOSED,T1]".to_string(), Account{status: AccountStatus::Closed, action: UserAction::T1, lock:None}),
-            ("[CLOSED,T2]".to_string(), Account{status: AccountStatus::Closed, action: UserAction::T2, lock:None}),
         ]); 
     }
 
@@ -404,35 +372,6 @@ mod tests {
             // state
             let copy = tc.clone();
             let err = tc.t2().unwrap_err();
-            assert!(matches!(err, AccountError::InvalidState{}));
-            assert_eq!(tc.status, copy.status);
-            assert_eq!(tc.action, copy.action);
-        }
-    }
-
-    #[test]
-    fn account_close() {
-        let mut test_cases = all_states();
-
-        for (key,tc) in test_cases.iter_mut() {
-            // happy case
-            // calling t2() on an account that is in the [FUNDED, APPROVED|CANCELLED|T2] state should succeed
-            // and the account should end up in the [CLOSED, OK|CANCELLED|T2] state
-           if key == "[FUNDED,APPROVED]" ||
-           key == "[FUNDED,CANCELLED]" ||
-           key == "[FUNDED,T2]" {
-            let copy = tc.clone();
-            let _ = tc.close().unwrap();
-            assert_eq!(tc.status, AccountStatus::Closed);
-            assert_eq!(tc.action, copy.action);
-            continue;
-           }
-
-            // calling close() on an account that is in any state other than [FUNDED, APPROVED|CANCELLED|T2] should
-            // return a AccountError:InvalidState, and the account should remain in the same
-            // state
-            let copy = tc.clone();
-            let err = tc.close().unwrap_err();
             assert!(matches!(err, AccountError::InvalidState{}));
             assert_eq!(tc.status, copy.status);
             assert_eq!(tc.action, copy.action);
