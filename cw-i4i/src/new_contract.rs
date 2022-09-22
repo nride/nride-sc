@@ -9,13 +9,14 @@ use cosmwasm_std::{
 
 use cw2::set_contract_version;
 use cw20::{Balance, Cw20Coin, Cw20CoinVerified, Cw20ExecuteMsg, Cw20ReceiveMsg};
+use serde::__private::de::Content;
 
 use crate::error::ContractError;
 use crate::new_msg::{
     CreateMsg, ExecuteMsg, InstantiateMsg, ReceiveMsg, QueryMsg, ListResponse, DetailsResponse, TopUpMsg, ApproveMsg,
 };
 
-use crate::escrow::{Escrow, WithdrawResult};
+use crate::escrow::{Escrow, Payout};
 use crate::new_state::{all_escrow_ids, ESCROWS};
 
 // version info for migration info
@@ -217,21 +218,31 @@ pub fn execute_withdraw(
     // this fails is no escrow there
     let mut escrow = ESCROWS.load(deps.storage, &id)?;
 
-    let coeffs = escrow.withdraw(env).unwrap();
+    if escrow.closed {
+        return Err(ContractError::Std(StdError::GenericErr { msg: "escrow is already closed".to_string() }));
+    }
+    
+    // compute payout returns an error if the escrow is not in a withdrawable state
+    // so the function will panic here if this is the case
+    let payout = escrow.compute_payout(env).unwrap();
 
-    let payments = create_payment_submsgs(&coeffs, escrow).unwrap();
+    escrow.close();
+    
+    ESCROWS.save(deps.storage, &id, &escrow)?;
+
+    let payments = create_payment_submsgs(&payout, escrow).unwrap();
     
     let res = Response::new().add_attributes(vec![
         ("action", "withdraw"),
             ("id", id.as_str()),
-            ("res", format!("({},{})", &coeffs.user_a_basis_points, coeffs.user_b_basis_points).as_str()), 
+            ("res", format!("({},{})", &payout.user_a_basis_points, payout.user_b_basis_points).as_str()), 
             ])
         .add_submessages(payments);
         
-        Ok(res)
+    Ok(res)
 }
 
-pub fn create_payment_submsgs(coeffs: &WithdrawResult, escrow: Escrow) -> StdResult<Vec<SubMsg>> {
+pub fn create_payment_submsgs(coeffs: &Payout, escrow: Escrow) -> StdResult<Vec<SubMsg>> {
     let mut msgs: Vec<SubMsg> = vec![];
     if let Balance::Cw20(token) = escrow.required_deposit {
         let user_a_payoff_msg = Cw20ExecuteMsg::Transfer {
@@ -278,6 +289,11 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
 fn query_details(deps: Deps, id: String) -> StdResult<DetailsResponse> {
     let escrow = ESCROWS.load(deps.storage, &id)?;
 
+    let payout_val = match escrow.payout {
+        None => None,
+        Some(payout) => Some(format!("({},{})", payout.user_a_basis_points, payout.user_b_basis_points)),
+    };
+
     let details = DetailsResponse {
         id,
         user_a: escrow.user_a.to_string(),
@@ -289,6 +305,8 @@ fn query_details(deps: Deps, id: String) -> StdResult<DetailsResponse> {
         t1_timeout: escrow.t1_timeout,
         t2_timeout: escrow.t2_timeout,
         required_deposit: escrow.required_deposit,
+        payout: payout_val,
+        closed: escrow.closed,
     };
 
     Ok(details)
@@ -463,6 +481,8 @@ mod tests {
                         amount: Uint128::new(REQUIRED_TOKEN_AMOUNT),
                     },
                 ),
+                payout: None,
+                closed: false,
             }
         );
 
@@ -498,6 +518,8 @@ mod tests {
                         amount: Uint128::new(REQUIRED_TOKEN_AMOUNT),
                     },
                 ),
+                payout: None,
+                closed: false,
             }
         );
 
@@ -533,6 +555,8 @@ mod tests {
                         amount: Uint128::new(REQUIRED_TOKEN_AMOUNT),
                     },
                 ),
+                payout: None,
+                closed: false,
             }
         );
 
@@ -568,6 +592,8 @@ mod tests {
                         amount: Uint128::new(REQUIRED_TOKEN_AMOUNT),
                     },
                 ),
+                payout: None,
+                closed: false,
             }
         );
 
@@ -580,6 +606,31 @@ mod tests {
         assert_eq!(2, res.messages.len());
         assert_eq!(("action", "withdraw"), res.attributes[0]);
         assert_eq!(("res", "(100,100)"), res.attributes[2]);
+
+        // ensure the escrow is what we expect
+        let details = query_details(deps.as_ref(), ESCROW_ID.to_string()).unwrap();
+        assert_eq!(
+            details,
+            DetailsResponse {
+                id: ESCROW_ID.to_string(),
+                user_a: USER_A_ADDR.to_string(),
+                account_a_state: "[FUNDED|APPROVED]".to_string(),
+                account_a_lock: Some(LOCK_B.to_string()),
+                user_b: USER_B_ADDR.to_string(),
+                account_b_state: "[FUNDED|APPROVED]".to_string(),
+                account_b_lock: Some(LOCK_A.to_string()),
+                t1_timeout: T1_TIMEOUT,
+                t2_timeout: T2_TIMEOUT,
+                required_deposit: Balance::Cw20(
+                    Cw20CoinVerified{
+                        address:Addr::unchecked(REQUIRED_TOKEN_ADDR),
+                        amount: Uint128::new(REQUIRED_TOKEN_AMOUNT),
+                    },
+                ),
+                payout: Some("(100,100)".to_string()),
+                closed: true,
+            }
+        );
     }
 
     #[test]

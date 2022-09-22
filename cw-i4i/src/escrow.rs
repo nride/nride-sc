@@ -7,8 +7,8 @@ use cw20::{Balance};
 
 use crate::{account::{Account, UserAction}, error::{AccountError, EscrowError}};
 
-#[derive(Clone, PartialEq,Debug)]
-pub struct WithdrawResult {
+#[derive(Serialize, Deserialize, JsonSchema, Clone, Copy, PartialEq, Debug)]
+pub struct Payout {
     pub user_a_basis_points: u8,
     pub user_b_basis_points: u8,
 }
@@ -33,6 +33,13 @@ pub struct Escrow {
     pub account_a: Account,
     /// account_a is the account state-machine for user_a
     pub account_b: Account,
+    /// close indicates whether the escrow is closed and already settled
+    /// if this value is true, it is assumed that all payouts have already
+    /// been settled
+    pub closed: bool,
+    /// payout holds the result of compute_payout or none if the escrow is in a 
+    /// state that doesn't allow withdrawals
+    pub payout: Option<Payout>,
 }
 
 impl Escrow {
@@ -60,6 +67,8 @@ impl Escrow {
             required_deposit: deposit,
             account_a: Account::new(),
             account_b: Account::new(),
+            closed: false,
+            payout: None,
         })
     }
 
@@ -127,7 +136,7 @@ impl Escrow {
         Err(AccountError::Std(StdError::NotFound {kind:"sender is not user_a or user_b".to_string()}))
     }
 
-    /// Withdraw calculates the withdrawal coefficients for both accounts based on
+    /// compute_payout calculates the withdrawal coefficients for both accounts based on
     /// the internal state of the escrow. The result is expressed in basis points.
     /// 
     ///       N            A         C         T1        T2
@@ -141,56 +150,74 @@ impl Escrow {
     ///     (130,  70) -> return 130% to user_a and 70% to user_b
     /// 
     /// Returns an StdError if the escrow is not in a withdrawable state
-    pub fn withdraw(&mut self, env: Env) -> Result<WithdrawResult, StdError> {
-       self.check_timeouts(env);
+    pub fn compute_payout(&mut self, env: Env) -> Result<Payout, StdError> {
+        if let Some(res) = self.payout {
+            return Ok(res);
+        }
+
+        self.check_timeouts(env);
+        
+        let res; 
         match (&self.account_a.action, &self.account_b.action) {
             (UserAction::Approved, UserAction::Approved) => {
-                Ok(WithdrawResult{user_a_basis_points:100, user_b_basis_points:100})
+                res = Payout{user_a_basis_points:100, user_b_basis_points:100};
             },
             (UserAction::Approved, UserAction::Cancelled) => {
-                Ok(WithdrawResult{user_a_basis_points:130, user_b_basis_points:70})
+                res = Payout{user_a_basis_points:130, user_b_basis_points:70};
             },
             (UserAction::Approved, UserAction::T2) => {
-                Ok(WithdrawResult{user_a_basis_points:150, user_b_basis_points:50})
+                res =Payout{user_a_basis_points:150, user_b_basis_points:50};
             },
             (UserAction::Cancelled, UserAction::Approved) => {
-                Ok(WithdrawResult{user_a_basis_points:70, user_b_basis_points:130})
+                res =Payout{user_a_basis_points:70, user_b_basis_points:130};
             },
             (UserAction::Cancelled, UserAction::Cancelled) => {
-                Ok(WithdrawResult{user_a_basis_points:50, user_b_basis_points:50})
+                res =Payout{user_a_basis_points:50, user_b_basis_points:50};
             },
             (UserAction::Cancelled, UserAction::T1) => {
-                Ok(WithdrawResult{user_a_basis_points:100, user_b_basis_points:0})
+                res =Payout{user_a_basis_points:100, user_b_basis_points:0};
             },
             (UserAction::Cancelled, UserAction::T2) => {
-                Ok(WithdrawResult{user_a_basis_points:50, user_b_basis_points:0})
+                res =Payout{user_a_basis_points:50, user_b_basis_points:0};
             },
             (UserAction::T1, UserAction::Cancelled) => {
-                Ok(WithdrawResult{user_a_basis_points:0, user_b_basis_points:100})
+                res =Payout{user_a_basis_points:0, user_b_basis_points:100};
             },
             (UserAction::T1, UserAction::T1) => {
-                Ok(WithdrawResult{user_a_basis_points:0, user_b_basis_points:0})
+                res =Payout{user_a_basis_points:0, user_b_basis_points:0};
             },
             (UserAction::T1, UserAction::T2) => {
-                Ok(WithdrawResult{user_a_basis_points:0, user_b_basis_points:100})
+                res =Payout{user_a_basis_points:0, user_b_basis_points:100};
             },
             (UserAction::T2, UserAction::Approved) => {
-                Ok(WithdrawResult{user_a_basis_points:50, user_b_basis_points:150})
+                res =Payout{user_a_basis_points:50, user_b_basis_points:150};
             },
             (UserAction::T2, UserAction::Cancelled) => {
-                Ok(WithdrawResult{user_a_basis_points:0, user_b_basis_points:50})
+                res =Payout{user_a_basis_points:0, user_b_basis_points:50};
             },
             (UserAction::T2, UserAction::T1) => {
-                Ok(WithdrawResult{user_a_basis_points:100, user_b_basis_points:0})
+                res =Payout{user_a_basis_points:100, user_b_basis_points:0};
             },
             (UserAction::T2, UserAction::T2) => {
-                Ok(WithdrawResult{user_a_basis_points:0, user_b_basis_points:0})
+                res =Payout{user_a_basis_points:0, user_b_basis_points:0};
             },
-            _ => Err(StdError::GenericErr{msg:"invalid state".to_string()})
+            _ => return Err(StdError::GenericErr{msg:"invalid state".to_string()})
         }
+
+        self.payout = Some(res);
+
+        return Ok(res);
     }
 
-
+    /// close sets the closed flag to true 
+    /// we can only close if the payout has already been computed
+    /// which indireclty ensures that the escrow is in a closeable 
+    /// state
+    pub fn close(&mut self) {
+        if let Some(_) = self.payout {
+            self.closed = true;
+        }
+    }
 }
 
 #[cfg(test)]
@@ -392,7 +419,7 @@ mod tests {
 
     struct TestCase {
         name: String,
-        expected: Result<WithdrawResult, StdError>,
+        expected: Payout,
         init:  fn() -> Escrow,
         withdraw_timestamp: u64,
     }
@@ -405,7 +432,7 @@ mod tests {
                 // call withdraw AFTER these events (it is irrelevant whether it is before or after the timeouts, so long as it
                 // is after the approvals)
                 name: "(APPROVED, APPROVED)".to_string(),
-                expected: Ok(WithdrawResult{user_a_basis_points:100, user_b_basis_points:100}),
+                expected: Payout{user_a_basis_points:100, user_b_basis_points:100},
                 init:  || {
                     let mut escrow = dummy_escrow(1).unwrap();
                     let _ = escrow.fund(dummy_env(10), Addr::unchecked("user_a"), DUMMY_LOCK_A).unwrap();
@@ -422,7 +449,7 @@ mod tests {
                 // user_b cancels before T2
                 // withdraw after user actions
                 name: "(APPROVED, CANCELLED)".to_string(),
-                expected: Ok(WithdrawResult{user_a_basis_points:130, user_b_basis_points:70}),
+                expected: Payout{user_a_basis_points:130, user_b_basis_points:70},
                 init:  || {
                     let mut escrow = dummy_escrow(1).unwrap();
                     let _ = escrow.fund(dummy_env(10), Addr::unchecked("user_a"), DUMMY_LOCK_A).unwrap();
@@ -439,7 +466,7 @@ mod tests {
                 // user_b does nothing
                 // call withdraw after T2 -> account_b should transition to T2
                 name: "(APPROVED, T2)".to_string(),
-                expected: Ok(WithdrawResult{user_a_basis_points:150, user_b_basis_points:50}),
+                expected: Payout{user_a_basis_points:150, user_b_basis_points:50},
                 init:  || {
                     let mut escrow = dummy_escrow(1).unwrap();
                     let _ = escrow.fund(dummy_env(10), Addr::unchecked("user_a"), DUMMY_LOCK_A).unwrap();
@@ -454,7 +481,7 @@ mod tests {
                 // user_a cancels before T2
                 // user_b approves before T2
                 name: "(CANCELLED, APPROVED)".to_string(),
-                expected: Ok(WithdrawResult{user_a_basis_points:70, user_b_basis_points:130}),
+                expected: Payout{user_a_basis_points:70, user_b_basis_points:130},
                 init:  || {
                     let mut escrow = dummy_escrow(1).unwrap();
                     let _ = escrow.fund(dummy_env(10), Addr::unchecked("user_a"), DUMMY_LOCK_A).unwrap();
@@ -469,7 +496,7 @@ mod tests {
                 // both users fund before T1
                 // both users cancel before T2
                 name: "(CANCELLED, CANCELLED)".to_string(),
-                expected: Ok(WithdrawResult{user_a_basis_points:50, user_b_basis_points:50}),
+                expected: Payout{user_a_basis_points:50, user_b_basis_points:50},
                 init:  || {
                     let mut escrow = dummy_escrow(1).unwrap();
                     let _ = escrow.fund(dummy_env(10), Addr::unchecked("user_a"), DUMMY_LOCK_A).unwrap();
@@ -485,7 +512,7 @@ mod tests {
                 // user_b tries to fund after T1
                 // user_a cancels before T2
                 name: "(CANCELLED, T1)".to_string(),
-                expected: Ok(WithdrawResult{user_a_basis_points:100, user_b_basis_points:0}),
+                expected: Payout{user_a_basis_points:100, user_b_basis_points:0},
                 init:  || {
                     let mut escrow = dummy_escrow(1).unwrap();
                     let _ = escrow.fund(dummy_env(10), Addr::unchecked("user_a"), DUMMY_LOCK_A).unwrap();
@@ -501,7 +528,7 @@ mod tests {
                 // user_b does nothing
                 // call withdraw after T2 -> account_b should transition to T2
                 name: "(CANCELLED, T2)".to_string(),
-                expected: Ok(WithdrawResult{user_a_basis_points:50, user_b_basis_points:0}),
+                expected: Payout{user_a_basis_points:50, user_b_basis_points:0},
                 init:  || {
                     let mut escrow = dummy_escrow(1).unwrap();
                     let _ = escrow.fund(dummy_env(10), Addr::unchecked("user_a"), DUMMY_LOCK_A).unwrap();
@@ -516,7 +543,7 @@ mod tests {
                 // user_a tries to fund after T1
                 // user_b cancels before T2
                 name: "(T1, CANCELLED)".to_string(),
-                expected: Ok(WithdrawResult{user_a_basis_points:0, user_b_basis_points:100}),
+                expected: Payout{user_a_basis_points:0, user_b_basis_points:100},
                 init:  || {
                     let mut escrow = dummy_escrow(1).unwrap();
                     let _ = escrow.fund(dummy_env(10), Addr::unchecked("user_b"), DUMMY_LOCK_B);
@@ -530,7 +557,7 @@ mod tests {
                 // both users do not fund before T1
                 // withdrawing after T1 causes both accounts to transition to T1
                 name: "(T1, T1)".to_string(),
-                expected: Ok(WithdrawResult{user_a_basis_points:0, user_b_basis_points:0}),
+                expected: Payout{user_a_basis_points:0, user_b_basis_points:0},
                 init:  || {
                     let escrow = dummy_escrow(1).unwrap();
                     return escrow;
@@ -543,7 +570,7 @@ mod tests {
                 // neither user does anything before T2
                 // calling withdraw after T2 causes account_b to transition to T2
                 name: "(T1, T2)".to_string(),
-                expected: Ok(WithdrawResult{user_a_basis_points:0, user_b_basis_points:100}),
+                expected: Payout{user_a_basis_points:0, user_b_basis_points:100},
                 init:  || {
                     let mut escrow = dummy_escrow(1).unwrap();
                     let _ = escrow.fund(dummy_env(10),Addr::unchecked("user_b"), DUMMY_LOCK_B).unwrap();
@@ -558,7 +585,7 @@ mod tests {
                 // user_a does nothing before T2
                 // calling withdraw after T2 causes account_a to transition to T2
                 name: "(T2, APPROVED)".to_string(),
-                expected: Ok(WithdrawResult{user_a_basis_points:50, user_b_basis_points:150}),
+                expected: Payout{user_a_basis_points:50, user_b_basis_points:150},
                 init:  || {
                     let mut escrow = dummy_escrow(1).unwrap();
                     let _ = escrow.fund(dummy_env(10),Addr::unchecked("user_a"), DUMMY_LOCK_A).unwrap();
@@ -574,7 +601,7 @@ mod tests {
                 // user_a does nothing before T2
                 // calling withdraw after T2 causes account_a to transition to T2
                 name: "(T2, CANCELLED)".to_string(),
-                expected: Ok(WithdrawResult{user_a_basis_points:0, user_b_basis_points:50}),
+                expected: Payout{user_a_basis_points:0, user_b_basis_points:50},
                 init:  || {
                     let mut escrow = dummy_escrow(1).unwrap();
                     let _ = escrow.fund(dummy_env(10), Addr::unchecked("user_a"), DUMMY_LOCK_A).unwrap();
@@ -590,7 +617,7 @@ mod tests {
                 // user_b does nothing at all
                 // calling withdraw after T2 causes account_a to transition to T2, and account_b to T1
                 name: "(T2, T1)".to_string(),
-                expected: Ok(WithdrawResult{user_a_basis_points:100, user_b_basis_points:0}),
+                expected: Payout{user_a_basis_points:100, user_b_basis_points:0},
                 init:  || {
                     let mut escrow = dummy_escrow(1).unwrap();
                     let _ = escrow.fund(dummy_env(10),Addr::unchecked("user_a"), DUMMY_LOCK_A).unwrap();
@@ -603,7 +630,7 @@ mod tests {
                 // neither user does anything before T2
                 // calling withdraw after T2 causes both accounts to transition to T2
                 name: "(T2, T2)".to_string(),
-                expected: Ok(WithdrawResult{user_a_basis_points:0, user_b_basis_points:0}),
+                expected: Payout{user_a_basis_points:0, user_b_basis_points:0},
                 init:  || {
                     let mut escrow = dummy_escrow(1).unwrap();
                     let _ = escrow.fund(dummy_env(10),Addr::unchecked("user_a"), DUMMY_LOCK_A).unwrap();
@@ -622,8 +649,9 @@ mod tests {
 
         for tc in test_cases.iter_mut() {
             let mut e = (tc.init)();
-            let res = e.withdraw(dummy_env(tc.withdraw_timestamp));
-            assert_eq!(tc.expected, res, "{}", tc.name);
+            let res = e.compute_payout(dummy_env(tc.withdraw_timestamp));
+            assert_eq!(tc.expected, res.unwrap(), "{}", tc.name);
+            assert_eq!(tc.expected, e.payout.unwrap(), "{}", tc.name);
         }
     }
 }

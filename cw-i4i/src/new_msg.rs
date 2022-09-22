@@ -80,4 +80,6 @@ pub struct DetailsResponse {
     pub t1_timeout: u64,
     pub t2_timeout: u64,
     pub required_deposit: Balance,
+    pub payout: Option<String>,
+    pub closed: bool,
 }
