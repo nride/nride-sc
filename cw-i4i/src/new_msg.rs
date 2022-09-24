@@ -9,13 +9,13 @@ pub struct InstantiateMsg {}
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum ExecuteMsg {
-    Create(CreateMsg),
-    TopUp(TopUpMsg),
+    /// This accepts a properly-encoded ReceiveMsg from a cw20 contract
+    /// to create and topup escrows
+    Receive(Cw20ReceiveMsg),
+    /// Approve, Cancel, and Withdraw can be sent directly to the escrow contract
     Approve(ApproveMsg),
     Cancel {id: String},
     Withdraw {id:String},
-    /// This accepts a properly-encoded ReceiveMsg from a cw20 contract
-    Receive(Cw20ReceiveMsg),
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
@@ -23,9 +23,6 @@ pub enum ExecuteMsg {
 pub enum ReceiveMsg {
     Create(CreateMsg),
     TopUp(TopUpMsg),
-    Approve(ApproveMsg),
-    Cancel{id:String},
-    Withdraw {id:String},
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]

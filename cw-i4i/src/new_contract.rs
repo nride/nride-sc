@@ -44,12 +44,6 @@ pub fn execute(
     msg: ExecuteMsg,
 ) -> Result<Response, ContractError> {
     match msg {
-        ExecuteMsg::Create(msg) => {
-            execute_create(deps, env,  msg, Balance::from(info.funds), &info.sender)
-        }
-        ExecuteMsg::TopUp(msg) => {
-            execute_topup(deps, env, msg, Balance::from(info.funds), &info.sender)
-        }
         ExecuteMsg::Approve(msg) => {
             execute_approve(deps, env, msg, &info.sender)
         }
@@ -82,15 +76,6 @@ pub fn execute_receive(
         ReceiveMsg::TopUp(msg) => {
             execute_topup(deps, env, msg, balance, &api.addr_validate(&wrapper.sender)?)
         },
-        ReceiveMsg::Approve(msg) => {
-            execute_approve(deps, env, msg, &api.addr_validate(&wrapper.sender)?)
-        },
-        ReceiveMsg::Cancel{id} => {
-            execute_cancel(deps, env, id, &api.addr_validate(&wrapper.sender)?)
-        },
-        ReceiveMsg::Withdraw{id} => {
-            execute_withdraw(deps, env, id)
-        }
     }
 }
 
@@ -369,7 +354,7 @@ mod tests {
         let receive = Cw20ReceiveMsg {
             sender: sender_addr,
             amount: Uint128::new(required_token_amount),
-            msg: to_binary(&ExecuteMsg::Create(create.clone())).unwrap(),
+            msg: to_binary(&ReceiveMsg::Create(create.clone())).unwrap(),
         };
         let info = mock_info(&required_token_addr, &[]);
         let msg = ExecuteMsg::Receive(receive.clone());
@@ -391,7 +376,7 @@ mod tests {
         let receive = Cw20ReceiveMsg {
             sender: sender_addr,
             amount: Uint128::new(deposit_token_amount),
-            msg: to_binary(&ExecuteMsg::TopUp(topup.clone())).unwrap(),
+            msg: to_binary(&ReceiveMsg::TopUp(topup.clone())).unwrap(),
         };
         let info = mock_info(&deposit_token_addr, &[]);
         let msg = ExecuteMsg::Receive(receive.clone());
@@ -402,37 +387,23 @@ mod tests {
         sender_addr: String,
         escrow_id: String,
         secret: String,
-        deposit_token_addr: String,
-        deposit_token_amount: u128,
     ) -> (MessageInfo, ExecuteMsg) {
         
         let approve = ApproveMsg{
             id: escrow_id,
             secret: secret,
         };
-        let receive = Cw20ReceiveMsg {
-            sender: sender_addr,
-            amount: Uint128::new(deposit_token_amount),
-            msg: to_binary(&ExecuteMsg::Approve(approve.clone())).unwrap(),
-        };
-        let info = mock_info(&deposit_token_addr,  &[]);
-        let msg = ExecuteMsg::Receive(receive.clone());
+        let info = mock_info(&sender_addr,  &[]);
+        let msg = ExecuteMsg::Approve(approve.clone());
             return (info, msg);
     }
 
     fn get_withdraw_msg(
         sender_addr: String,
         escrow_id: String,
-        deposit_token_addr: String,
     ) -> (MessageInfo, ExecuteMsg) {
-        
-        let receive = Cw20ReceiveMsg {
-            sender: sender_addr,
-            amount: Uint128::new(0),
-            msg: to_binary(&ReceiveMsg::Withdraw{id:escrow_id}).unwrap(),
-        };
-        let info = mock_info(&deposit_token_addr,  &[]);
-        let msg = ExecuteMsg::Receive(receive.clone());
+        let info = mock_info(&sender_addr,  &[]);
+        let msg = ExecuteMsg::Withdraw{id:escrow_id};
             return (info, msg);
     }
 
@@ -528,8 +499,6 @@ mod tests {
             USER_A_ADDR.to_string(),
             ESCROW_ID.to_string(),
             SECRET_B.to_string(),
-            REQUIRED_TOKEN_ADDR.to_string(),
-            0,
         );  
         let res = execute(deps.as_mut(), get_mock_env(3), info, approve_msg).unwrap();
         assert_eq!(0, res.messages.len());
@@ -565,8 +534,6 @@ mod tests {
             USER_B_ADDR.to_string(),
             ESCROW_ID.to_string(),
             SECRET_A.to_string(),
-            REQUIRED_TOKEN_ADDR.to_string(),
-            0,
         );  
         let res = execute(deps.as_mut(), get_mock_env(4), info, approve_msg).unwrap();
         assert_eq!(0, res.messages.len());
@@ -600,7 +567,6 @@ mod tests {
         let (info, withdraw_msg) = get_withdraw_msg(
             USER_A_ADDR.to_string(),
             ESCROW_ID.to_string(),
-            REQUIRED_TOKEN_ADDR.to_string(),
         );  
         let res = execute(deps.as_mut(), get_mock_env(4), info, withdraw_msg).unwrap();
         assert_eq!(2, res.messages.len());
