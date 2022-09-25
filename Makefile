@@ -60,7 +60,7 @@ token-send-grant:
 	./scripts/token-send-grant.sh $(from) $(to)
 
 escrow-create:
-	./scripts/escrow-create.sh
+	./scripts/escrow-create.sh "test-escrow" $(b) "lock" 
 
 escrow-list:
 	./scripts/escrow-list.sh

@@ -7,6 +7,8 @@ This repo contains the set of smart-contracts that support nRide's token infrast
 
 1) install the junod CLI: https://docs.junonetwork.io/validators/getting-setup
 
+(install v10.0.2 or above)
+
 2) create keys called `faucet`, `alice` and `bob` using junod:
 
 ```
