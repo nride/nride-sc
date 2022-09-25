@@ -1,13 +1,12 @@
 [package]
-name = "cw20-i4i"
-version = "0.12.1"
-authors = ["Ethan Frey <ethanfrey@users.noreply.github.com>"]
-edition = "2018"
-description = "Implementation of an escrow that accepts CosmWasm-20 tokens as well as native tokens"
+name = "cw20-i4i-escrow"
+version = "0.1.0"
+authors = ["Martin Arrivets <arrivets@users.noreply.github.com>"]
+edition = "2021"
+description = "Implementation of an escrow for p2p transactions"
 license = "Apache-2.0"
-repository = "https://github.com/CosmWasm/cw-tokens"
-homepage = "https://cosmwasm.com"
-documentation = "https://docs.cosmwasm.com"
+repository = "https://github.com/arrivets/nride-sc"
+homepage = "https://nride.com"
 
 [lib]
 crate-type = ["cdylib", "rlib"]

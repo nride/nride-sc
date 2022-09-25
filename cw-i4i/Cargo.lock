@@ -260,8 +260,8 @@ dependencies = [
 ]
 
 [[package]]
-name = "cw20-i4i"
-version = "0.12.1"
+name = "cw20-i4i-escrow"
+version = "0.1.0"
 dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",

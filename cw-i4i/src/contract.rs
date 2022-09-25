@@ -18,7 +18,7 @@ use crate::escrow::{Escrow, Payout};
 use crate::state::{all_escrow_ids, ESCROWS};
 
 // version info for migration info
-const CONTRACT_NAME: &str = "crates.io:cw20-i4i";
+const CONTRACT_NAME: &str = "crates.io:cw20-i4i-escrow";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 #[cfg_attr(not(feature = "library"), entry_point)]
