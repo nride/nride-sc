@@ -2,9 +2,10 @@
 
 mod integration_test;
 
-mod error;
+pub mod contract;
+pub mod msg;
+pub mod error;
+
 mod account;
 mod escrow;
 mod state;
-mod msg;
-mod contract;

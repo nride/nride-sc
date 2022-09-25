@@ -3,84 +3,101 @@
   "title": "DetailsResponse",
   "type": "object",
   "required": [
-    "arbiter",
-    "cw20_balance",
-    "cw20_whitelist",
-    "description",
+    "account_a_state",
+    "account_b_state",
+    "closed",
     "id",
-    "native_balance",
-    "source",
-    "title"
+    "required_deposit",
+    "t1_timeout",
+    "t2_timeout",
+    "user_a",
+    "user_b"
   ],
   "properties": {
-    "arbiter": {
-      "description": "arbiter can decide to approve or refund the escrow",
-      "type": "string"
-    },
-    "cw20_balance": {
-      "description": "Balance in cw20 tokens",
-      "type": "array",
-      "items": {
-        "$ref": "#/definitions/Cw20Coin"
-      }
-    },
-    "cw20_whitelist": {
-      "description": "Whitelisted cw20 tokens",
-      "type": "array",
-      "items": {
-        "type": "string"
-      }
-    },
-    "description": {
-      "description": "Longer description of the escrow, e.g. what conditions should be met",
-      "type": "string"
-    },
-    "end_height": {
-      "description": "When end height set and block height exceeds this value, the escrow is expired. Once an escrow is expired, it can be returned to the original funder (via \"refund\").",
-      "type": [
-        "integer",
-        "null"
-      ],
-      "format": "uint64",
-      "minimum": 0.0
-    },
-    "end_time": {
-      "description": "When end time (in seconds since epoch 00:00:00 UTC on 1 January 1970) is set and block time exceeds this value, the escrow is expired. Once an escrow is expired, it can be returned to the original funder (via \"refund\").",
-      "type": [
-        "integer",
-        "null"
-      ],
-      "format": "uint64",
-      "minimum": 0.0
-    },
-    "id": {
-      "description": "id of this escrow",
-      "type": "string"
-    },
-    "native_balance": {
-      "description": "Balance in native tokens",
-      "type": "array",
-      "items": {
-        "$ref": "#/definitions/Coin"
-      }
-    },
-    "recipient": {
-      "description": "if approved, funds go to the recipient",
+    "account_a_lock": {
       "type": [
         "string",
         "null"
       ]
     },
-    "source": {
-      "description": "if refunded, funds go to the source",
+    "account_a_state": {
       "type": "string"
     },
-    "title": {
-      "description": "Title of the escrow",
+    "account_b_lock": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "account_b_state": {
+      "type": "string"
+    },
+    "closed": {
+      "type": "boolean"
+    },
+    "id": {
+      "description": "id of this escrow",
+      "type": "string"
+    },
+    "payout": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "required_deposit": {
+      "$ref": "#/definitions/Balance"
+    },
+    "t1_timeout": {
+      "type": "integer",
+      "format": "uint64",
+      "minimum": 0.0
+    },
+    "t2_timeout": {
+      "type": "integer",
+      "format": "uint64",
+      "minimum": 0.0
+    },
+    "user_a": {
+      "type": "string"
+    },
+    "user_b": {
       "type": "string"
     }
   },
   "definitions": {
+    "Addr": {
+      "description": "A human readable address.\n\nIn Cosmos, this is typically bech32 encoded. But for multi-chain smart contracts no assumptions should be made other than being UTF-8 encoded and of reasonable length.\n\nThis type represents a validated address. It can be created in the following ways 1. Use `Addr::unchecked(input)` 2. Use `let checked: Addr = deps.api.addr_validate(input)?` 3. Use `let checked: Addr = deps.api.addr_humanize(canonical_addr)?` 4. Deserialize from JSON. This must only be done from JSON that was validated before such as a contract's state. `Addr` must not be used in messages sent by the user because this would result in unvalidated instances.\n\nThis type is immutable. If you really need to mutate it (Really? Are you sure?), create a mutable copy using `let mut mutable = Addr::to_string()` and operate on that `String` instance.",
+      "type": "string"
+    },
+    "Balance": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "native"
+          ],
+          "properties": {
+            "native": {
+              "$ref": "#/definitions/NativeBalance"
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "cw20"
+          ],
+          "properties": {
+            "cw20": {
+              "$ref": "#/definitions/Cw20CoinVerified"
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
     "Coin": {
       "type": "object",
       "required": [
@@ -96,7 +113,7 @@
         }
       }
     },
-    "Cw20Coin": {
+    "Cw20CoinVerified": {
       "type": "object",
       "required": [
         "address",
@@ -104,11 +121,17 @@
       ],
       "properties": {
         "address": {
-          "type": "string"
+          "$ref": "#/definitions/Addr"
         },
         "amount": {
           "$ref": "#/definitions/Uint128"
         }
+      }
+    },
+    "NativeBalance": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/Coin"
       }
     },
     "Uint128": {

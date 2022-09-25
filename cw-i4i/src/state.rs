@@ -17,7 +17,7 @@ pub fn all_escrow_ids(storage: &dyn Storage) -> StdResult<Vec<String>> {
 mod tests {
     use super::*;
 
-    use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info};
+    use cosmwasm_std::testing::mock_env;
     use cosmwasm_std::{Addr, Uint128, Timestamp} ;    
     use cw20::{Balance, Cw20CoinVerified};
     use cosmwasm_std::testing::MockStorage;

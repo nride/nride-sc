@@ -1,15 +1,13 @@
 #[cfg(not(feature = "library"))]
-use std::convert::{From, TryFrom};
 
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    from_binary, to_binary, Addr, BankMsg, Binary, Deps, DepsMut, Env, MessageInfo, Response,
+    from_binary, to_binary, Addr, Binary, Deps, DepsMut, Env, MessageInfo, Response,
     StdResult, SubMsg, WasmMsg, StdError,
 };
 
 use cw2::set_contract_version;
-use cw20::{Balance, Cw20Coin, Cw20CoinVerified, Cw20ExecuteMsg, Cw20ReceiveMsg};
-use serde::__private::de::Content;
+use cw20::{Balance, Cw20CoinVerified, Cw20ExecuteMsg, Cw20ReceiveMsg};
 
 use crate::error::ContractError;
 use crate::msg::{
@@ -22,7 +20,6 @@ use crate::state::{all_escrow_ids, ESCROWS};
 // version info for migration info
 const CONTRACT_NAME: &str = "crates.io:cw20-i4i";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
-const CW20_TOKEN_ADDR: &str = "xxxxxxxxxx";
 
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn instantiate(
@@ -305,8 +302,8 @@ fn query_list(deps: Deps) -> StdResult<ListResponse> {
 
 #[cfg(test)]
 mod tests {
-    use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info, MockApi, MockQuerier, MockStorage};
-    use cosmwasm_std::{attr, coin, coins, CosmosMsg, StdError, Uint128, OwnedDeps, Empty, Timestamp};
+    use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info};
+    use cosmwasm_std::{ Uint128, Timestamp};
 
     use super::*;
 

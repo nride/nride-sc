@@ -1,9 +1,8 @@
-use k256::pkcs8::Error;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use cosmwasm_std::{Addr, StdError, Env, Timestamp};
-use cw20::{Balance};
+use cw20::Balance;
 
 use crate::{account::{Account, UserAction}, error::{AccountError, EscrowError}};
 
@@ -224,7 +223,7 @@ impl Escrow {
 mod tests {
     use super::*;
 
-    use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info};
+    use cosmwasm_std::testing::mock_env;
     use cosmwasm_std::{Uint128};
     use cw20::{Cw20CoinVerified};
 

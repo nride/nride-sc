@@ -15,22 +15,13 @@
       "additionalProperties": false
     },
     {
-      "description": "Adds all sent native tokens to the contract",
       "type": "object",
       "required": [
         "top_up"
       ],
       "properties": {
         "top_up": {
-          "type": "object",
-          "required": [
-            "id"
-          ],
-          "properties": {
-            "id": {
-              "type": "string"
-            }
-          }
+          "$ref": "#/definitions/TopUpMsg"
         }
       },
       "additionalProperties": false
@@ -40,61 +31,46 @@
     "CreateMsg": {
       "type": "object",
       "required": [
-        "arbiter",
-        "description",
+        "account_b_lock",
         "id",
-        "title"
+        "t1_timeout",
+        "t2_timeout",
+        "user_b"
       ],
       "properties": {
-        "arbiter": {
-          "description": "arbiter can decide to approve or refund the escrow",
+        "account_b_lock": {
           "type": "string"
-        },
-        "cw20_whitelist": {
-          "description": "Besides any possible tokens sent with the CreateMsg, this is a list of all cw20 token addresses that are accepted by the escrow during a top-up. This is required to avoid a DoS attack by topping-up with an invalid cw20 contract. See https://github.com/CosmWasm/cosmwasm-plus/issues/19",
-          "type": [
-            "array",
-            "null"
-          ],
-          "items": {
-            "type": "string"
-          }
-        },
-        "description": {
-          "description": "Longer description of the escrow, e.g. what conditions should be met",
-          "type": "string"
-        },
-        "end_height": {
-          "description": "When end height set and block height exceeds this value, the escrow is expired. Once an escrow is expired, it can be returned to the original funder (via \"refund\").",
-          "type": [
-            "integer",
-            "null"
-          ],
-          "format": "uint64",
-          "minimum": 0.0
-        },
-        "end_time": {
-          "description": "When end time (in seconds since epoch 00:00:00 UTC on 1 January 1970) is set and block time exceeds this value, the escrow is expired. Once an escrow is expired, it can be returned to the original funder (via \"refund\").",
-          "type": [
-            "integer",
-            "null"
-          ],
-          "format": "uint64",
-          "minimum": 0.0
         },
         "id": {
           "description": "id is a human-readable name for the escrow to use later 3-20 bytes of utf-8 text",
           "type": "string"
         },
-        "recipient": {
-          "description": "if approved, funds go to the recipient",
-          "type": [
-            "string",
-            "null"
-          ]
+        "t1_timeout": {
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0.0
         },
-        "title": {
-          "description": "Title of the escrow",
+        "t2_timeout": {
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0.0
+        },
+        "user_b": {
+          "type": "string"
+        }
+      }
+    },
+    "TopUpMsg": {
+      "type": "object",
+      "required": [
+        "account_a_lock",
+        "id"
+      ],
+      "properties": {
+        "account_a_lock": {
+          "type": "string"
+        },
+        "id": {
           "type": "string"
         }
       }
