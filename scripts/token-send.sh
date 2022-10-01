@@ -4,11 +4,14 @@ set -eux
 
 FROM=$1
 TO=$2
+AMOUNT=$3
 
 $CMD tx wasm execute $NRIDE \
-'{"transfer":{"amount":"100","recipient":"'"$($CMD keys show -a $TO)"'"}}' \
+'{"transfer":{"amount":"'$AMOUNT'","recipient":"'"$($CMD keys show -a $TO)"'"}}' \
 --from $FROM \
 --gas-prices 0.1$FEETOKEN \
+--gas auto \
+--gas-adjustment 1.3 \
 --chain-id $CHAINID \
 --node $NODE \
 -b block \

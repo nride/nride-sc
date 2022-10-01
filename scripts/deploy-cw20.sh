@@ -9,5 +9,3 @@ $CMD tx wasm store cw-plus/artifacts/cw20_base.wasm  \
     --node $NODE\
     -b block \
     -y
-
-## code id 1

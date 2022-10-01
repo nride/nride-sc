@@ -2,10 +2,9 @@
 
 FROM=$1
 ID=$2
-SECRET=$3
 
 $CMD tx wasm execute $ESCROW \
-'{"approve":{"id": "'"$ID"'", "secret": "'"$SECRET"'"}}' \
+'{"cancel":{"id": "'"$ID"'"}}' \
 --from $FROM \
 --fee-account $($CMD keys show -a faucet) \
 --gas auto \

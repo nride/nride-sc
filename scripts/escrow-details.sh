@@ -1,5 +1,5 @@
 #!/bin/sh
 
 $CMD query wasm contract-state smart $ESCROW \
-'{"details":{"id":"first-escrow-id"}}' \
+'{"details":{"id":"'"$1"'"}}' \
 --node $NODE
