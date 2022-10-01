@@ -1,10 +1,5 @@
 # Developing
 
-If you have recently created a contract with this template, you probably could use some
-help on how to build and test the contract, as well as prepare it for production. This
-file attempts to provide a brief overview, assuming you have installed a recent
-version of Rust already (eg. 1.58.1+).
-
 ## Prerequisites
 
 Before starting, make sure you have [rustup](https://rustup.rs/) along with a
@@ -61,44 +56,4 @@ json wrt. the defined schema.
 
 ## Preparing the Wasm bytecode for production
 
-Before we upload it to a chain, we need to ensure the smallest output size possible,
-as this will be included in the body of a transaction. We also want to have a
-reproducible build process, so third parties can verify that the uploaded Wasm
-code did indeed come from the claimed rust code.
-
-To solve both these issues, we have produced `rust-optimizer`, a docker image to
-produce an extremely small build output in a consistent manner. The suggest way
-to run it is this:
-
-```sh
-docker run --rm -v "$(pwd)":/code \
-  --mount type=volume,source="$(basename "$(pwd)")_cache",target=/code/target \
-  --mount type=volume,source=registry_cache,target=/usr/local/cargo/registry \
-  cosmwasm/rust-optimizer:0.12.6
-```
-
-Or, If you're on an arm64 machine, you should use a docker image built with arm64.
-```sh
-docker run --rm -v "$(pwd)":/code \
-  --mount type=volume,source="$(basename "$(pwd)")_cache",target=/code/target \
-  --mount type=volume,source=registry_cache,target=/usr/local/cargo/registry \
-  cosmwasm/rust-optimizer-arm64:0.12.6
-```
-
-We must mount the contract code to `/code`. You can use a absolute path instead
-of `$(pwd)` if you don't want to `cd` to the directory first. The other two
-volumes are nice for speedup. Mounting `/code/target` in particular is useful
-to avoid docker overwriting your local dev files with root permissions.
-Note the `/code/target` cache is unique for each contract being compiled to limit
-interference, while the registry cache is global.
-
-This is rather slow compared to local compilations, especially the first compile
-of a given contract. The use of the two volume caches is very useful to speed up
-following compiles of the same contract.
-
-This produces an `artifacts` directory with a `PROJECT_NAME.wasm`, as well as
-`checksums.txt`, containing the Sha256 hash of the wasm file.
-The wasm file is compiled deterministically (anyone else running the same
-docker on the same git commit should get the identical file with the same Sha256 hash).
-It is also stripped and minimized for upload to a blockchain (we will also
-gzip it in the uploading process to make it even smaller).
+Run `make compile-i4i` from root `nride-sc` directory

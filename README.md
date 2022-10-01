@@ -1,13 +1,58 @@
 
 # NRIDE Smart-Contracts
 
-This repo contains the set of smart-contracts that support nRide's token infrastructure
+This repo contains the set of smart-contracts that support nRide's token 
+infrastructure
 
-## Requirements
+## CW20 Token
 
-1) install the junod CLI: https://docs.junonetwork.io/validators/getting-setup
+The nRide token is implemented as a `CW20` Token.
 
-(install v10.0.2 or above)
+This repo uses a git submodule to track the official specs and implementations 
+of the CW20 standard, as well as its dependencies, in the upstream repo 
+`cw-plus`.
+
+To compile:
+
+```sh
+make compile-cw20
+```
+
+## I4I Escrow 
+
+The i4i escrow smart-contract implements an advanced escrow mechanism suitable
+for p2p transactions.
+
+To compile:
+
+```sh
+make compile-i4i
+```
+
+More info about the escrow in [cw-i4i](cw-i4i/README.md)
+
+## Demo
+
+We have two users, Alice and Bob, who will be using the escrow contract. Alice 
+creates the escrow, locking 100 NRIDE tokens, with T1 timeout in 2 minutes, 
+and T2 timeout in 5 minutes. Hence, Bob has 2 minutes to topup the contract, or 
+else it will enter the T1-Timeout state where Alice can get her full deposit 
+back. Once, Bob has topped up the escrow, both users have up to T2 timeout to 
+approve or cancel the escrow. At any time, they can attempt to withdraw and see 
+what the payout is. The contract returns an error if it is not in a withdrawable
+state. Here, we will walk through the happy case, where both users approve the 
+escrow on time, and get their full deposit back, but we encourage users to try 
+cancelling or letting the escrow timeout to see how it affects the payout.
+
+Note: This has only been tested on a Macbook Air with M1 processor
+
+We currently support two environments "Local" and "Testnet", but we will run 
+through the Local version, using a Docker container to run a single Juno node.
+
+### Prerequisites
+
+1) install the junod CLI (v10.0.2 or above): 
+https://docs.junonetwork.io/validators/getting-setup#build-juno-from-source
 
 2) create keys called `faucet`, `alice` and `bob` using junod:
 
@@ -19,80 +64,50 @@ junod keys add bob
 
 These account names are used in the scripts to test sending and receiving tokens.
 
-3) (For testnet environment only) request testnet tokens for the `faucet` account by writing a message in Juno's faucet channel: https://discord.com/channels/816256689078403103/842073995059003422
+3) (For testnet environment only) request testnet tokens for the `faucet` 
+account by writing a message in Juno's faucet channel: 
+https://discord.com/channels/816256689078403103/842073995059003422
 
-## Deployment
+4) Install Docker
 
-We currently support two environments "Local" and "Testnet".
+5) If you haven't done so already, compile both contracts.
 
-=> Comment out the relevant section in the Makefile <=
-
-### (Optional) Compile Contracts
-
-ATTENTION: This can take a long time
+Note: this can take a long time
 
 ```
 make compile-cw20
 make compile-i4i
 ```
 
-### Local Env (Docker)
-
-1) Run a local `junod` node with `make start-node` (requires docker)
-2) Deploy and initialise cw20 contract: 
-```
-make deploy-cw20
-make init-cw20 code=1
-```
-3) Deploy and initialize escrow contract (i4i):
-```
-make deploy-i4i
-make init-i4i code=2
-```
-
-### Testnet Env (JUNO UNI-3 Testnet)
-
-1) Deploy and initialize cw20 contract:
+### Run the local Juno node
 
 ```
-make deploy-cw20
-# make note of resulting code-id
-make init-cw20 code=[code-id]
+make start-node
 ```
 
-make note of the resulting contract address and copy it in the Makefile
-under the NRIDE variable
-
-2) Same thing with escrow contract:
+### Initialize the smart-contracts and the demo environment (fund accounts etc)
 
 ```
-make deploy-i4i
-# make note of resulting code-id
-make init-i4i code=[code-id]
+make demo-bootstrap
 ```
 
-make note of the resulting contract address and copy it in the Makefile
-under the ESCROW variable
-
-## Usage
-
-With the environment setup, we can run some commands to interract with the smart-contracts.
-
-For example to send nride tokens from `faucet` to `alice`:
+### Test happy case
 
 ```
-make token-send from=faucet to=alice
+make demo-create
+make demo-topup
+make demo-approve-alice
+make demo-approve-bob
+make demo-withdraw
+make demo-details
 ```
 
-There are many other Makefile recipes to test...
+Note: run `make demo-details` at any time to query the escrow state
 
-## Smart Contracts
+### Have fun!
 
-### cw20_base
+Try using `make demo-cancel-alice` or `make demo-cancel-bob` to see what 
+happens when one of the users cancels. Or try letting the escrow timeout to 
+see what happens.
 
-This repo contains a git submodule under `cw-plus` containing a set of "official" smart-contracts,
-include the cw20_base which are using to implement our token.
 
-### cw_i4i
-
-Our escrow smart-contract based on cw20_escrow: https://github.com/CosmWasm/cw-tokens/tree/main/contracts/cw20-escrow

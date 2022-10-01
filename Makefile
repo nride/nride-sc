@@ -11,11 +11,6 @@ export FEETOKEN = ujunox
 export NRIDE = juno14hj2tavq8fpesdwxxcu44rty3hh90vhujrvcmstl4zr3txmfvw9skjuwg8
 export ESCROW = juno1nc5tatafv6eyq7llkr2gv50ff9e22mnf70qgjlv737ktmt4eswrq68ev2p
 
-export ALICE_LOCK = 04b4ac68eff3a82d86db5f0489d66f91707e99943bf796ae6a2dcb2205c9522fa7915428b5ac3d3b9291e62142e7246d85ad54504fabbdb2bae5795161f8ddf259
-export ALICE_SECRET = 3c9229289a6125f7fdf1885a77bb12c37a8d3b4962d936f7e3084dece32a3ca1   
-export BOB_LOCK = 042d5f7beb52d336163483804facb17c47033fb14dfc3f3c88235141bae1896fc8d99a685aafaf92d5f41d866fe387b988a998590326f1b549878b9d03eabed7e5
-export BOB_SECRET= cde73ee8f8584c54ac455c941f75990f4bff47a4340023e3fd236344e9a7d4ea  
-
 ########################
 ## JUNO UNI-3 Testnet ##
 ########################
@@ -24,6 +19,14 @@ export BOB_SECRET= cde73ee8f8584c54ac455c941f75990f4bff47a4340023e3fd236344e9a7d
 # export FEETOKEN = ujunox
 # export NRIDE = juno1caapzpyuhddkzps9nwatyknlvmm2av6whkk7aqse4umzmp0gpm5se7nzg7 # address of the cw20 token smart-contract
 # export ESCROW = juno1eds9t7rpfsfeyu35nevyc8tglumvejjg6p0yegkrv4wjlf0lghtqwy75uv # address of the escrow smart-contract
+
+################
+## Demo Locks ##
+################
+export ALICE_LOCK = 04b4ac68eff3a82d86db5f0489d66f91707e99943bf796ae6a2dcb2205c9522fa7915428b5ac3d3b9291e62142e7246d85ad54504fabbdb2bae5795161f8ddf259
+export ALICE_SECRET = 3c9229289a6125f7fdf1885a77bb12c37a8d3b4962d936f7e3084dece32a3ca1   
+export BOB_LOCK = 042d5f7beb52d336163483804facb17c47033fb14dfc3f3c88235141bae1896fc8d99a685aafaf92d5f41d866fe387b988a998590326f1b549878b9d03eabed7e5
+export BOB_SECRET= cde73ee8f8584c54ac455c941f75990f4bff47a4340023e3fd236344e9a7d4ea
 
 #############################
 
@@ -72,7 +75,7 @@ demo-withdraw:
 
 demo-details:
 	./scripts/escrow-details.sh test
-	
+
 #############################
 
 escrow-create:
