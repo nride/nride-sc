@@ -1,1 +1,1 @@
-588689eb81d50ec6fd66193399778b6625e37d7d2c72731efd8d8bf40ca6bb1a  ./target/wasm32-unknown-unknown/release/cw20_i4i_escrow.wasm
+cad58f5a486b5889b0f684ae20c1176da002ebac97c67232829dc08e5284297d  ./target/wasm32-unknown-unknown/release/cw20_i4i_escrow.wasm

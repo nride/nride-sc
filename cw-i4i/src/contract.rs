@@ -9,7 +9,7 @@ use cosmwasm_std::{
 use cw2::set_contract_version;
 use cw20::{Balance, Cw20CoinVerified, Cw20ExecuteMsg, Cw20ReceiveMsg};
 
-use crate::error::ContractError;
+use crate::error::{ContractError, EscrowError};
 use crate::msg::{
     CreateMsg, ExecuteMsg, InstantiateMsg, ReceiveMsg, QueryMsg, ListResponse, DetailsResponse, TopUpMsg, ApproveMsg,
 };
@@ -83,32 +83,20 @@ pub fn execute_create(
     balance: Balance,
     sender: &Addr,
 ) -> Result<Response, ContractError> {
-    if balance.is_empty() {
-        return Err(ContractError::EmptyBalance {});
-    }
+  
 
-    // TODO check balance matches whitelisted NRIDE token
-    // transfer token (or is that automatic)
+    let user_b_addr = deps.api.addr_validate(&msg.user_b)?;
 
-    let user_b_addr = deps.api.addr_validate(&msg.user_b);
-
-    let escrow_res = Escrow::create(
+    let mut escrow = Escrow::create(
         &env,
         sender.clone(),
-        user_b_addr.unwrap(),
+        user_b_addr,
         msg.t1_timeout,
         msg.t2_timeout,
         balance,
-    );
-    if escrow_res.is_err() {
-        return Err(ContractError::Expired {  }); // XXX proper error message
-    }
-    let mut escrow = escrow_res.unwrap();
+    )?;
 
-    let fund_res = escrow.fund(env, sender.clone(), &msg.account_b_lock);
-    if fund_res.is_err() {
-        return Err(ContractError::InvalidState(fund_res.unwrap_err()));
-    }
+    escrow.fund(env, sender.clone(), &msg.account_b_lock)?;
 
     // try to store it, fail if the id was already in use
     ESCROWS.update(deps.storage, &msg.id, |existing| match existing {
@@ -127,23 +115,17 @@ pub fn execute_topup(
     balance: Balance,
     sender: &Addr,
 ) -> Result<Response, ContractError> {
-    if balance.is_empty() {
-        return Err(ContractError::EmptyBalance {});
-    }
+
     // this fails is no escrow there
     let mut escrow = ESCROWS.load(deps.storage, &msg.id)?;
 
     // check token
     if balance != escrow.required_deposit {
-        return Err(ContractError::InvalidDeposit{  }); 
+        return Err(ContractError::Escrow( EscrowError::InvalidDeposit{} )); 
     }
 
-    let fund_res = escrow.fund(env, sender.clone(), &msg.account_a_lock);
-    if fund_res.is_err() {
-        return Err(ContractError::InvalidState(fund_res.unwrap_err()));
-    }
+    escrow.fund(env, sender.clone(), &msg.account_a_lock)?;
 
-    // and save
     ESCROWS.save(deps.storage, &msg.id, &escrow)?;
 
     let res = Response::new().add_attributes(vec![("action", "top_up"), ("id", msg.id.as_str())]);
@@ -159,12 +141,8 @@ pub fn execute_approve(
     // this fails is no escrow there
     let mut escrow = ESCROWS.load(deps.storage, &msg.id)?;
 
-    let approve_res = escrow.approve(env, sender.clone(), &msg.secret);
-    if approve_res.is_err() {
-        return Err(ContractError::InvalidState(approve_res.unwrap_err()));
-    }
+    escrow.approve(env, sender.clone(), &msg.secret)?;
 
-    // and save
     ESCROWS.save(deps.storage, &msg.id, &escrow)?;
 
     let res = Response::new().add_attributes(vec![("action", "approve"), ("id", msg.id.as_str())]);
@@ -180,12 +158,8 @@ pub fn execute_cancel(
     // this fails is no escrow there
     let mut escrow = ESCROWS.load(deps.storage, &id)?;
 
-    let cancel_res = escrow.cancel(env, sender.clone());
-    if cancel_res.is_err() {
-        return Err(ContractError::InvalidState(cancel_res.unwrap_err()));
-    }
+    escrow.cancel(env, sender.clone())?;
 
-    // and save
     ESCROWS.save(deps.storage, &id, &escrow)?;
 
     let res = Response::new().add_attributes(vec![("action", "cancel"), ("id", id.as_str())]);
@@ -201,12 +175,12 @@ pub fn execute_withdraw(
     let mut escrow = ESCROWS.load(deps.storage, &id)?;
 
     if escrow.closed {
-        return Err(ContractError::Std(StdError::GenericErr { msg: "escrow is already closed".to_string() }));
+        return Err(ContractError::Closed {  });
     }
     
     // compute payout returns an error if the escrow is not in a withdrawable state
     // so the function will panic here if this is the case
-    let payout = escrow.compute_payout(env).unwrap();
+    let payout = escrow.compute_payout(env)?;
 
     escrow.close();
     
@@ -227,33 +201,36 @@ pub fn execute_withdraw(
 pub fn create_payment_submsgs(coeffs: &Payout, escrow: Escrow) -> StdResult<Vec<SubMsg>> {
     let mut msgs: Vec<SubMsg> = vec![];
     if let Balance::Cw20(token) = escrow.required_deposit {
-        let user_a_payoff_msg = Cw20ExecuteMsg::Transfer {
-            recipient: escrow.user_a.to_string(),
-            amount:  token.amount.multiply_ratio(
-                coeffs.user_a_basis_points as u128,
-                100 as u128,
-            ),
-        };
-        let user_a_exec = SubMsg::new(WasmMsg::Execute {
-            contract_addr: token.address.to_string(),
-            msg: to_binary(&user_a_payoff_msg)?,
-            funds: vec![],
-        });
-        msgs.push(user_a_exec);
-
-        let user_b_payoff_msg = Cw20ExecuteMsg::Transfer {
-            recipient: escrow.user_b.to_string(),
-            amount:  token.amount.multiply_ratio(
-                coeffs.user_b_basis_points as u128,
-                100 as u128,
-            ),
-        };
-        let user_b_exec = SubMsg::new(WasmMsg::Execute {
-            contract_addr: token.address.to_string(),
-            msg: to_binary(&user_b_payoff_msg)?,
-            funds: vec![],
-        });
-        msgs.push(user_b_exec);
+        if coeffs.user_a_basis_points > 0 {
+            let user_a_payoff_msg = Cw20ExecuteMsg::Transfer {
+                recipient: escrow.user_a.to_string(),
+                amount:  token.amount.multiply_ratio(
+                    coeffs.user_a_basis_points as u128,
+                    100 as u128,
+                ),
+            };
+            let user_a_exec = SubMsg::new(WasmMsg::Execute {
+                contract_addr: token.address.to_string(),
+                msg: to_binary(&user_a_payoff_msg)?,
+                funds: vec![],
+            });
+            msgs.push(user_a_exec);
+        }
+        if coeffs.user_b_basis_points > 0 {
+            let user_b_payoff_msg = Cw20ExecuteMsg::Transfer {
+                recipient: escrow.user_b.to_string(),
+                amount:  token.amount.multiply_ratio(
+                    coeffs.user_b_basis_points as u128,
+                    100 as u128,
+                ),
+            };
+            let user_b_exec = SubMsg::new(WasmMsg::Execute {
+                contract_addr: token.address.to_string(),
+                msg: to_binary(&user_b_payoff_msg)?,
+                funds: vec![],
+            });
+            msgs.push(user_b_exec);
+        }  
     } else {
         return Err(StdError::GenericErr { msg: "native tokens not supported".to_string() });
     }
@@ -436,10 +413,10 @@ mod tests {
             DetailsResponse {
                 id: ESCROW_ID.to_string(),
                 user_a: USER_A_ADDR.to_string(),
-                account_a_state: "[FUNDED|NONE]".to_string(),
+                account_a_state: "[FUNDED,NONE]".to_string(),
                 account_a_lock: None,
                 user_b: USER_B_ADDR.to_string(),
-                account_b_state: "[INIT|NONE]".to_string(),
+                account_b_state: "[INIT,NONE]".to_string(),
                 account_b_lock: Some(LOCK_A.to_string()),
                 t1_timeout: T1_TIMEOUT,
                 t2_timeout: T2_TIMEOUT,
@@ -473,10 +450,10 @@ mod tests {
             DetailsResponse {
                 id: ESCROW_ID.to_string(),
                 user_a: USER_A_ADDR.to_string(),
-                account_a_state: "[FUNDED|NONE]".to_string(),
+                account_a_state: "[FUNDED,NONE]".to_string(),
                 account_a_lock: Some(LOCK_B.to_string()),
                 user_b: USER_B_ADDR.to_string(),
-                account_b_state: "[FUNDED|NONE]".to_string(),
+                account_b_state: "[FUNDED,NONE]".to_string(),
                 account_b_lock: Some(LOCK_A.to_string()),
                 t1_timeout: T1_TIMEOUT,
                 t2_timeout: T2_TIMEOUT,
@@ -508,10 +485,10 @@ mod tests {
             DetailsResponse {
                 id: ESCROW_ID.to_string(),
                 user_a: USER_A_ADDR.to_string(),
-                account_a_state: "[FUNDED|APPROVED]".to_string(),
+                account_a_state: "[FUNDED,APPROVED]".to_string(),
                 account_a_lock: Some(LOCK_B.to_string()),
                 user_b: USER_B_ADDR.to_string(),
-                account_b_state: "[FUNDED|NONE]".to_string(),
+                account_b_state: "[FUNDED,NONE]".to_string(),
                 account_b_lock: Some(LOCK_A.to_string()),
                 t1_timeout: T1_TIMEOUT,
                 t2_timeout: T2_TIMEOUT,
@@ -543,10 +520,10 @@ mod tests {
             DetailsResponse {
                 id: ESCROW_ID.to_string(),
                 user_a: USER_A_ADDR.to_string(),
-                account_a_state: "[FUNDED|APPROVED]".to_string(),
+                account_a_state: "[FUNDED,APPROVED]".to_string(),
                 account_a_lock: Some(LOCK_B.to_string()),
                 user_b: USER_B_ADDR.to_string(),
-                account_b_state: "[FUNDED|APPROVED]".to_string(),
+                account_b_state: "[FUNDED,APPROVED]".to_string(),
                 account_b_lock: Some(LOCK_A.to_string()),
                 t1_timeout: T1_TIMEOUT,
                 t2_timeout: T2_TIMEOUT,
@@ -577,10 +554,10 @@ mod tests {
             DetailsResponse {
                 id: ESCROW_ID.to_string(),
                 user_a: USER_A_ADDR.to_string(),
-                account_a_state: "[FUNDED|APPROVED]".to_string(),
+                account_a_state: "[FUNDED,APPROVED]".to_string(),
                 account_a_lock: Some(LOCK_B.to_string()),
                 user_b: USER_B_ADDR.to_string(),
-                account_b_state: "[FUNDED|APPROVED]".to_string(),
+                account_b_state: "[FUNDED,APPROVED]".to_string(),
                 account_b_lock: Some(LOCK_A.to_string()),
                 t1_timeout: T1_TIMEOUT,
                 t2_timeout: T2_TIMEOUT,
@@ -629,7 +606,7 @@ mod tests {
             REQUIRED_TOKEN_AMOUNT,
         );  
         let err = execute(deps.as_mut(), get_mock_env(2), info, topup_msg).unwrap_err();
-        assert!(matches!(err, ContractError::InvalidDeposit {  }));
+        assert!(matches!(err, ContractError::Escrow(EscrowError::InvalidDeposit{})));
 
         // topup an escrow with different deposit amount
         let (info, topup_msg) = get_topup_msg(
@@ -640,7 +617,7 @@ mod tests {
             666,
         );  
         let err = execute(deps.as_mut(), get_mock_env(2), info, topup_msg).unwrap_err();
-        assert!(matches!(err, ContractError::InvalidDeposit {  }));
+        assert!(matches!(err, ContractError::Escrow(EscrowError::InvalidDeposit{})));
 
     }
 }

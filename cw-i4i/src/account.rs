@@ -67,14 +67,16 @@ impl Account {
     /// if the account is in any state other than [INIT, NONE], the function returns 
     /// an AccountError::InvalidState
     pub fn fund(&mut self) -> Result<(),AccountError> {
-        // TODO: check valid pub key
         match (&self.status, &self.action) {
             (AccountStatus::Init, UserAction::None )=> {
                 self.status = AccountStatus::Funded;
                 return Ok(());
             },
             _other => {
-                return Err(AccountError::InvalidState{});
+                return Err(AccountError::InvalidState{
+                    action: "fund".to_string(),
+                    state: self.to_string(),
+                });
             },
         }
     }
@@ -99,14 +101,17 @@ impl Account {
                 return Ok(());
             },
             _other => {
-                return Err(AccountError::InvalidState{});
+                return Err(AccountError::InvalidState{
+                    action: "approve".to_string(),
+                    state: self.to_string(),
+                });
             },
         }
     }
 
     fn unlock(&mut self, secret:&str) -> Result<(), AccountError> {
         if self.lock.is_none() {
-            return Err(AccountError::InvalidState {  });
+            return Err(AccountError::NoLock { });
         }
         
         let private_key = hex::decode(secret);
@@ -129,7 +134,7 @@ impl Account {
             return Ok(());
         }
 
-        return Err(AccountError::InvalidSecret{});
+        return Err(AccountError::InvalidSecret { });
     }
 
     /// This triggers a state transition from [FUNDED, NONE] to [FUNDED, CANCEL]
@@ -142,7 +147,10 @@ impl Account {
                 return Ok(());
             },
             _other => {
-                return Err(AccountError::InvalidState{});
+                return Err(AccountError::InvalidState{
+                    action: "cancel".to_string(),
+                    state: self.to_string(),
+                });
             },
         }
     }
@@ -157,7 +165,10 @@ impl Account {
                 return Ok(());
             }
             _other => {
-                return Err(AccountError::InvalidState{});
+                return Err(AccountError::InvalidState{
+                    action: "t1".to_string(),
+                    state: self.to_string(),
+                });
             },
         }
     }
@@ -172,7 +183,10 @@ impl Account {
                 return Ok(());
             },
             _other => {
-                return Err(AccountError::InvalidState{});
+                return Err(AccountError::InvalidState{
+                    action: "t2".to_string(),
+                    state: self.to_string(),
+                });
             },
         }
     }
@@ -180,7 +194,7 @@ impl Account {
 
 impl std::fmt::Display for Account {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "[{}|{}]", self.status, self.action)
+        write!(f, "[{},{}]", self.status, self.action)
     }
 }
 
@@ -224,7 +238,7 @@ mod tests {
             // calling fund() on a new Account should succeed and the account should end up 
             // in the [FUNDED, NONE] state
            if key == "[INIT,NONE]" {
-            let _ = tc.fund().unwrap();
+            _ = tc.fund().unwrap();
             assert_eq!(tc.status, AccountStatus::Funded);
             assert_eq!(tc.action, UserAction::None);
             continue;
@@ -235,7 +249,10 @@ mod tests {
             // state
             let copy = tc.clone();
             let err = tc.fund().unwrap_err();
-            assert!(matches!(err, AccountError::InvalidState{}));
+            assert_eq!(err, AccountError::InvalidState{
+                action: "fund".to_string(),
+                state: key.to_string(),
+            });
             assert_eq!(tc.status, copy.status);
             assert_eq!(tc.action, copy.action);
             assert_eq!(tc.lock, None);
@@ -265,7 +282,7 @@ mod tests {
         let _ = a.fund().unwrap();
         // don't set lock
         let err = a.approve(DUMMY_SECRET_INCORRECT).unwrap_err();
-        assert!(matches!(err, AccountError::InvalidState{}));
+        assert!(matches!(err, AccountError::NoLock{}));
     }
 
     #[test]
@@ -292,7 +309,10 @@ mod tests {
             // state
             let copy = tc.clone();
             let err = tc.approve(DUMMY_SECRET_CORRECT).unwrap_err();
-            assert!(matches!(err, AccountError::InvalidState{}));
+            assert_eq!(err, AccountError::InvalidState{
+                action: "approve".to_string(),
+                state: key.to_string(),
+            });
             assert_eq!(tc.status, copy.status);
             assert_eq!(tc.action, copy.action);
         }
@@ -318,7 +338,10 @@ mod tests {
             // state
             let copy = tc.clone();
             let err = tc.cancel().unwrap_err();
-            assert!(matches!(err, AccountError::InvalidState{}));
+            assert_eq!(err, AccountError::InvalidState{
+                action: "cancel".to_string(),
+                state: key.to_string(),
+            });
             assert_eq!(tc.status, copy.status);
             assert_eq!(tc.action, copy.action);
         }
@@ -345,7 +368,10 @@ mod tests {
             // state
             let copy = tc.clone();
             let err = tc.t1().unwrap_err();
-            assert!(matches!(err, AccountError::InvalidState{}));
+            assert_eq!(err, AccountError::InvalidState{
+                action: "t1".to_string(),
+                state: key.to_string(),
+            });
             assert_eq!(tc.status, copy.status);
             assert_eq!(tc.action, copy.action);
         }
@@ -372,7 +398,10 @@ mod tests {
             // state
             let copy = tc.clone();
             let err = tc.t2().unwrap_err();
-            assert!(matches!(err, AccountError::InvalidState{}));
+            assert_eq!(err, AccountError::InvalidState{
+                action: "t2".to_string(),
+                state: key.to_string(),
+            });
             assert_eq!(tc.status, copy.status);
             assert_eq!(tc.action, copy.action);
         }

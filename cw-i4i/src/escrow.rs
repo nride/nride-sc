@@ -1,10 +1,10 @@
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use cosmwasm_std::{Addr, StdError, Env, Timestamp};
+use cosmwasm_std::{Addr, Env, Timestamp};
 use cw20::Balance;
 
-use crate::{account::{Account, UserAction}, error::{AccountError, EscrowError}};
+use crate::{account::{Account, UserAction}, error::EscrowError};
 
 #[derive(Serialize, Deserialize, JsonSchema, Clone, Copy, PartialEq, Debug)]
 pub struct Payout {
@@ -51,6 +51,10 @@ impl Escrow {
         deposit: Balance,
     ) -> Result<Self,EscrowError> {
         
+        if deposit.is_empty() {
+            return Err(EscrowError::EmptyDeposit {});
+        }
+
         if t1_timeout >= t2_timeout  ||
         env.block.time >= Timestamp::from_seconds(t1_timeout) {
             return Err(EscrowError::InvalidTimeouts{});
@@ -86,24 +90,18 @@ impl Escrow {
     /// Set the sender's account AccountStatus to Funded
     /// Returns an AccountError if this is an invalid state transition
     /// Also sets the lock on the counterparty's account
-    pub fn fund(&mut self, env: Env, sender: Addr, lock: &str) -> Result<(), AccountError> {
+    pub fn fund(&mut self, env: Env, sender: Addr, lock: &str) -> Result<(), EscrowError> {
         self.check_timeouts(env);
         if sender == self.user_a {
-            let res = self.account_a.fund();
-            if res.is_ok() {
-                self.account_b.set_lock(lock);
-            }
-            return res;
-
-        }
-        if sender == self.user_b {
-            let res = self.account_b.fund();
-            if res.is_ok() {
+            self.account_a.fund()?;
+            self.account_b.set_lock(lock);
+        } else if sender == self.user_b {
+            self.account_b.fund()?;
             self.account_a.set_lock(lock);
-            }
-            return res;
-        }
-        Err(AccountError::Std(StdError::NotFound {kind:"sender is not user_a or user_b".to_string()}))
+        } else {
+            return Err(EscrowError::UnknownUser)
+        } 
+        return Ok({});
     }
 
     /// Set the sender's UserAction to Approved
@@ -111,28 +109,30 @@ impl Escrow {
     /// GUARDED by the counterparty's secret such that
     /// a user can only approve its own Account if it is in posession of the counterparty's 
     /// secret
-    pub fn approve(&mut self, env: Env, sender: Addr, secret: &str) -> Result<(), AccountError> {
+    pub fn approve(&mut self, env: Env, sender: Addr, secret: &str) -> Result<(), EscrowError> {
         self.check_timeouts(env);
         if sender == self.user_a {
-            return self.account_a.approve(secret);
+            self.account_a.approve(secret)?;
+        } else if sender == self.user_b {
+            self.account_b.approve(secret)?;
+        } else {
+            return Err(EscrowError::UnknownUser)
         }
-        if sender == self.user_b {
-            return self.account_b.approve(secret);
-        }
-        Err(AccountError::Std(StdError::NotFound {kind:"sender is not user_a or user_b".to_string()}))
+        return Ok({});
     }
 
     /// Set the sender's account UserAction to Cancelled
     /// Returns an AccountError if this is an invalid state transition
-    pub fn cancel(&mut self, env: Env, sender: Addr) -> Result<(), AccountError> {
+    pub fn cancel(&mut self, env: Env, sender: Addr) -> Result<(), EscrowError> {
         self.check_timeouts(env);
         if sender == self.user_a {
-            return self.account_a.cancel();
+            self.account_a.cancel()?;
+        } else if sender == self.user_b {
+            self.account_b.cancel()?;
+        } else {
+            return Err(EscrowError::UnknownUser)
         }
-        if sender == self.user_b {
-            return self.account_b.cancel();
-        }
-        Err(AccountError::Std(StdError::NotFound {kind:"sender is not user_a or user_b".to_string()}))
+        return Ok({});
     }
 
     /// compute_payout calculates the withdrawal coefficients for both accounts based on
@@ -148,8 +148,9 @@ impl Escrow {
     /// Ex: (100, 100) -> return 100% for both accounts
     ///     (130,  70) -> return 130% to user_a and 70% to user_b
     /// 
-    /// Returns an StdError if the escrow is not in a withdrawable state
-    pub fn compute_payout(&mut self, env: Env) -> Result<Payout, StdError> {
+    /// Returns an EscrowError::InvalidWithdrawState if the escrow is not in a 
+    /// withdrawable state
+    pub fn compute_payout(&mut self, env: Env) -> Result<Payout, EscrowError> {
         if let Some(res) = self.payout {
             return Ok(res);
         }
@@ -200,7 +201,7 @@ impl Escrow {
             (UserAction::T2, UserAction::T2) => {
                 res =Payout{user_a_basis_points:0, user_b_basis_points:0};
             },
-            _ => return Err(StdError::GenericErr{msg:"invalid state".to_string()})
+            _ => return Err(EscrowError::InvalidWithdrawState { msg: format!("[{},{}]", self.account_a.action, self.account_b.action) })
         }
 
         self.payout = Some(res);
@@ -228,6 +229,7 @@ mod tests {
     use cw20::{Cw20CoinVerified};
 
     use crate::account::{AccountStatus, UserAction};
+    use crate::error::AccountError;
 
     const  DUMMY_LOCK_A: &str = "04b4ac68eff3a82d86db5f0489d66f91707e99943bf796ae6a2dcb2205c9522fa7915428b5ac3d3b9291e62142e7246d85ad54504fabbdb2bae5795161f8ddf259";
     const  DUMMY_SECRET_A: &str =  "3c9229289a6125f7fdf1885a77bb12c37a8d3b4962d936f7e3084dece32a3ca1";   
@@ -288,7 +290,7 @@ mod tests {
             Addr::unchecked("bad"),
             DUMMY_LOCK_A,
         ).unwrap_err();
-        assert!(matches!(err, AccountError::Std(_)));
+        assert!(matches!(err, EscrowError::UnknownUser));
 
         // fund account_a before T1, check that user_b's lock is set.
         let _ = e.fund(
@@ -318,9 +320,9 @@ mod tests {
         let err = e.fund(
             dummy_env(30),
             Addr::unchecked("user_a"),
-             "hacker lock",
+            "hacker lock",
         ).unwrap_err();
-        assert!(matches!(err, AccountError::InvalidState {  }));
+        assert!(matches!(err, EscrowError::Account(AccountError::InvalidState { action:_, state:_ })));
         assert_eq!(e.account_a.status, AccountStatus::Funded);
         assert_eq!(e.account_a.action, UserAction::None);
         assert_eq!(e.account_b.status, AccountStatus::Funded);
@@ -332,7 +334,7 @@ mod tests {
             Addr::unchecked("user_b"),
              "hacker lock",
         ).unwrap_err();
-        assert!(matches!(err, AccountError::InvalidState {  }));
+        assert!(matches!(err, EscrowError::Account(AccountError::InvalidState { action:_, state:_ })));
         assert_eq!(e.account_a.status, AccountStatus::Funded);
         assert_eq!(e.account_a.action, UserAction::None);
         assert_eq!(e.account_b.status, AccountStatus::Funded);
@@ -354,7 +356,7 @@ mod tests {
             Addr::unchecked("bad"),
             DUMMY_SECRET_A,
         ).unwrap_err();
-        assert!(matches!(err, AccountError::Std(_)));
+        assert!(matches!(err, EscrowError::UnknownUser));
 
         // test that user_a can approve its own account using b's secret
         let _ = e.approve(
@@ -389,7 +391,7 @@ mod tests {
             dummy_env(10),
             Addr::unchecked("bad"),
         ).unwrap_err();
-        assert!(matches!(err, AccountError::Std(_)));
+        assert!(matches!(err, EscrowError::UnknownUser));
 
         // fund accounts before cancelling
         let _ = e.fund(dummy_env(10), Addr::unchecked("user_a"), DUMMY_LOCK_A).unwrap();

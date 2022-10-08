@@ -6,45 +6,49 @@ pub enum ContractError {
     #[error("{0}")]
     Std(#[from] StdError),
 
-    #[error("Unauthorized")]
-    Unauthorized {},
+    #[error(transparent)]
+    Escrow(#[from] EscrowError),
 
-    #[error("Invalid state")]
-    InvalidState (AccountError),
-
-    #[error("Invalid deposit")]
-    InvalidDeposit (),
-
-    #[error("Only accepts tokens in the cw20_whitelist")]
-    NotInWhitelist {},
-
-    #[error("Escrow is expired")]
-    Expired {},
-
-    #[error("Send some coins to create an escrow")]
-    EmptyBalance {},
+    #[error(transparent)]
+    Account(#[from] AccountError),
 
     #[error("Escrow id already in use")]
     AlreadyInUse {},
 
-    #[error("Recipient is not set")]
-    RecipientNotSet {},
+    #[error("Escrow is closed")]
+    Closed {},
+
 }
 
 #[derive(Error, Debug, PartialEq)]
 pub enum EscrowError {
+    #[error(transparent)]
+    Account(#[from] AccountError),
+
+    #[error("Send some coins to create an escrow")]
+    EmptyDeposit {},
+    
+    #[error("Match required deposit")]
+    InvalidDeposit {},
+
     #[error("Invalid timeouts")]
     InvalidTimeouts,
+
+    #[error("Sender is not user_a or user_b")]
+    UnknownUser,
+    
+    #[error("The escrow is not in a withdrawable state {}", msg)]
+    InvalidWithdrawState{msg: String}
 }
 
 
 #[derive(Error, Debug, PartialEq)]
 pub enum AccountError {
-    #[error("{0}")]
-    Std(#[from] StdError),
+    #[error("cannot call {} in state {}", action, state)]
+    InvalidState {action: String, state: String},
 
-    #[error("Invalid State")]
-    InvalidState {},
+    #[error("account lock is not set")]
+    NoLock {},
 
     #[error("Invalid Secret")]
     InvalidSecret {}
