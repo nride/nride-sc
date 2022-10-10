@@ -5,20 +5,20 @@ export CMD = junod
 ###########
 ## LOCAL ##
 ###########
-export NODE = http://localhost:26657
-export CHAINID = testing
-export FEETOKEN = ujunox
-export NRIDE = juno14hj2tavq8fpesdwxxcu44rty3hh90vhujrvcmstl4zr3txmfvw9skjuwg8
-export ESCROW = juno1nc5tatafv6eyq7llkr2gv50ff9e22mnf70qgjlv737ktmt4eswrq68ev2p
+# export NODE = http://localhost:26657
+# export CHAINID = testing
+# export FEETOKEN = ujunox
+# export NRIDE = juno14hj2tavq8fpesdwxxcu44rty3hh90vhujrvcmstl4zr3txmfvw9skjuwg8
+# export ESCROW = juno1nc5tatafv6eyq7llkr2gv50ff9e22mnf70qgjlv737ktmt4eswrq68ev2p
 
 ########################
-## JUNO UNI-3 Testnet ##
+## JUNO UNI-5 Testnet ##
 ########################
-# export NODE = https://rpc.uni.juno.deuslabs.fi:443
-# export CHAINID = uni-3
-# export FEETOKEN = ujunox
-# export NRIDE = juno1caapzpyuhddkzps9nwatyknlvmm2av6whkk7aqse4umzmp0gpm5se7nzg7 # address of the cw20 token smart-contract
-# export ESCROW = juno1eds9t7rpfsfeyu35nevyc8tglumvejjg6p0yegkrv4wjlf0lghtqwy75uv # address of the escrow smart-contract
+export NODE = https://juno-testnet-rpc.polkachu.com:443
+export CHAINID = uni-5
+export FEETOKEN = ujunox
+export NRIDE = juno1q9wr0p5wklvjusgaeq95fhfhg7mmtjn66z0aeky4acfnd2v62qhsdsd4nl
+export ESCROW = juno1ag6zjcn5nygs9742s9qewe4j32v9xzf4l8zmh9ckjs56t8h82czsng0jc6
 
 ################
 ## Demo Locks ##
@@ -123,10 +123,10 @@ token-balance:
 	./scripts/token-balance.sh $(addr)
 
 token-send:
-	./scripts/token-send.sh $(from) $(to)
+	./scripts/token-send.sh $(from) $(to) $(amount)
 
 token-send-grant:
-	./scripts/token-send-grant.sh $(from) $(to)
+	./scripts/token-send-grant.sh $(from) $(to) $(amount)
 
 feegrant-list:
 	./scripts/feegrant-list.sh $(acc)

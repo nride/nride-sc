@@ -40,8 +40,7 @@ TOKEN_EXECUTE='{"send": '"$SEND_CONTENT"'}';
 echo $TOKEN_EXECUTE | jq
 
 # cw20 contract
-$CMD tx wasm execute $NRIDE \
-"$TOKEN_EXECUTE" \
+$CMD tx wasm execute $NRIDE "$TOKEN_EXECUTE" \
 --from $FROM \
 --fee-account $($CMD keys show -a faucet) \
 --gas-prices 0.1$FEETOKEN \

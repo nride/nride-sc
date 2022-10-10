@@ -1,6 +1,6 @@
 #!/bin/sh
 
-$CMD tx wasm store cw-i4i/artifacts/cw20_i4i_escrow-aarch64.wasm  \
+$CMD tx wasm store cw-i4i/artifacts/cw20_i4i_escrow.wasm  \
     --from faucet \
     --chain-id=$CHAINID \
     --gas-prices 0.1$FEETOKEN \

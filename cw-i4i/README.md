@@ -146,7 +146,7 @@ Everyone loses their deposit. Results in funds going to the treasury.
 
 ## Exchange Secrets
 
-TODO
+TD
 
 ## Notes
 
