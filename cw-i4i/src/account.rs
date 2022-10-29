@@ -122,7 +122,7 @@ impl Account {
         let recomputed_public_key = SigningKey::from_bytes(&private_key.unwrap())
         .unwrap()
         .verifying_key()
-        .to_encoded_point(false)
+        .to_encoded_point(true)
         .as_bytes()
         .to_vec();
 
@@ -203,9 +203,9 @@ mod tests {
     use super::*;
     use std::{collections::HashMap};
 
-    static DUMMY_LOCK: &str = "04b4ac68eff3a82d86db5f0489d66f91707e99943bf796ae6a2dcb2205c9522fa7915428b5ac3d3b9291e62142e7246d85ad54504fabbdb2bae5795161f8ddf259";
-    static DUMMY_SECRET_CORRECT: &str = "3c9229289a6125f7fdf1885a77bb12c37a8d3b4962d936f7e3084dece32a3ca1";
-    static DUMMY_SECRET_INCORRECT: &str = "3c9229289a6125f7fdf1885a77bb12c37a8d3b4962d936f7e3084dece32xxxxx";
+    static DUMMY_LOCK: &str = "0330347c5cb0f1627bdd2e7b082504a443b2bf50ad2e3efbb4e754ebd687c78c24";
+    static DUMMY_SECRET_CORRECT: &str = "27874aa2b70ce7281c94413c36d44fac6fa6a1198f2c529188c4dd4f7a4e1870";
+    static DUMMY_SECRET_INCORRECT: &str = "27874aa2b70ce7281c94413c36d44fac6fa6a1198f2c529188c4dd4f7a4exxxx";
 
      fn all_states() -> HashMap<String, Account> {
         return HashMap::from([
@@ -409,21 +409,18 @@ mod tests {
 
     #[test]
     fn gen_key() {
-
-        let secret =    "cde73ee8f8584c54ac455c941f75990f4bff47a4340023e3fd236344e9a7d4ea";
+        let secret = "cde73ee8f8584c54ac455c941f75990f4bff47a4340023e3fd236344e9a7d4ea";
         let private_key = hex::decode(secret).unwrap();
 
         let recomputed_public_key = SigningKey::from_bytes(&private_key)
         .unwrap()
         .verifying_key()
-        .to_encoded_point(false)
+        .to_encoded_point(true)
         .as_bytes()
         .to_vec();
 
         let recomputed_public_key_str = hex::encode(recomputed_public_key);
 
         println!("{}", recomputed_public_key_str);
-
-        // 042d5f7beb52d336163483804facb17c47033fb14dfc3f3c88235141bae1896fc8d99a685aafaf92d5f41d866fe387b988a998590326f1b549878b9d03eabed7e5
     }
 }
