@@ -14,11 +14,21 @@ export CMD = junod
 ########################
 ## JUNO UNI-5 Testnet ##
 ########################
-export NODE = https://rpc.uni.junonetwork.io:443
-export CHAINID = uni-5
-export FEETOKEN = ujunox
-export NRIDE = juno1q9wr0p5wklvjusgaeq95fhfhg7mmtjn66z0aeky4acfnd2v62qhsdsd4nl
-export ESCROW = juno1pyqazts4um8je4ard7s52y3nhfqaayl94jzmtwxzjnqj2jt3ehrq4avmjk # codeid 2736
+# export NODE = https://rpc.uni.junonetwork.io:443
+# export CHAINID = uni-5
+# export FEETOKEN = ujunox
+# export NRIDE = juno1q9wr0p5wklvjusgaeq95fhfhg7mmtjn66z0aeky4acfnd2v62qhsdsd4nl
+# export ESCROW = juno1pyqazts4um8je4ard7s52y3nhfqaayl94jzmtwxzjnqj2jt3ehrq4avmjk # codeid 2736
+
+
+########################
+## JUNO Mainnet       ##
+########################
+export NODE = https://rpc-juno.mib.tech:443
+export CHAINID = juno-1
+export FEETOKEN = ujuno
+export NRIDE = juno1qmlchtmjpvu0cr7u0tad2pq8838h6farrrjzp39eqa9xswg7teussrswlq
+export ESCROW = juno18a4v5qekm9a5dugfhkgyzv6wcxlys0jwh9p4y7k0hfuf9xvxhaksme8fac
 
 ################
 ## Demo Locks ##
