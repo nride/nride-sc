@@ -27,8 +27,24 @@ export CMD = junod
 export NODE = https://rpc-juno.mib.tech:443
 export CHAINID = juno-1
 export FEETOKEN = ujuno
-export NRIDE = juno1qmlchtmjpvu0cr7u0tad2pq8838h6farrrjzp39eqa9xswg7teussrswlq
+# NRIDE is the address of the NRIDE CW20 contract
+export NRIDE = juno1qmlchtmjpvu0cr7u0tad2pq8838h6farrrjzp39eqa9xswg7teussrswlq 
+# ESCROW is the address of the nRide escrow contract
 export ESCROW = juno18a4v5qekm9a5dugfhkgyzv6wcxlys0jwh9p4y7k0hfuf9xvxhaksme8fac
+# ICS20 is the address of the CW20-ICS20 contract that allows sending CW2O tokens
+# through IBC
+export ICS20 = juno1v4887y83d6g28puzvt8cl0f3cdhd3y6y9mpysnsp3k8krdm7l6jqgm0rkn
+# CHANNEL is the channel between JUNO and OSMOSIS, linked to the CW20-ICS20 
+# contract above, through which NRIDE tokens are sent to OSMOSIS
+export CHANNEL = channel-47
+
+########################
+## OSMOSIS Mainnet    ##
+########################
+export OSMONODE = https://rpc.osmosis.zone:443
+# IBCDENOM is the denomination of NRIDE tokens on OSMOSIS sent throught the 
+# CW20-ICS20 channel configured above
+export IBCDENOM = ibc/E750D31033DC1CF4A044C3AA0A8117401316DC918FBEBC4E3D34F91B09D5F54C
 
 ################
 ## Demo Locks ##
@@ -154,7 +170,22 @@ native-balance:
 native-send:
 	./scripts/native-send.sh $(to)
 
+native-balance-osmo:
+	./scripts/native-balance-osmo.sh $(acc)
+	
 #############################
 
+ics20-admin:
+	./scripts/ics20-info.sh
 
+ics20-channels:
+	./scripts/ics20-channels.sh
 
+ics20-channel:
+	./scripts/ics20-channel.sh $(CHANNEL)
+
+ics20-allow:
+	./scripts/ics20-allow.sh $(from)
+
+ics20-transfer:
+	./scripts/ics20-transfer.sh $(from) $(to) $(amount) $(CHANNEL)
