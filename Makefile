@@ -172,20 +172,14 @@ native-send:
 
 native-balance-osmo:
 	./scripts/native-balance-osmo.sh $(acc)
-	
-#############################
 
-ics20-admin:
-	./scripts/ics20-info.sh
+#############################
 
 ics20-channels:
 	./scripts/ics20-channels.sh
 
 ics20-channel:
 	./scripts/ics20-channel.sh $(CHANNEL)
-
-ics20-allow:
-	./scripts/ics20-allow.sh $(from)
 
 ics20-transfer:
 	./scripts/ics20-transfer.sh $(from) $(to) $(amount) $(CHANNEL)
