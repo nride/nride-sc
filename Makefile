@@ -34,14 +34,15 @@ export ESCROW = juno18a4v5qekm9a5dugfhkgyzv6wcxlys0jwh9p4y7k0hfuf9xvxhaksme8fac
 # ICS20 is the address of the CW20-ICS20 contract that allows sending CW2O tokens
 # through IBC
 export ICS20 = juno1v4887y83d6g28puzvt8cl0f3cdhd3y6y9mpysnsp3k8krdm7l6jqgm0rkn
-# CHANNEL is the channel between JUNO and OSMOSIS, linked to the CW20-ICS20 
+# JUNO_CHANNEL is the channel from JUNO to OSMOSIS, linked to the CW20-ICS20 
 # contract above, through which NRIDE tokens are sent to OSMOSIS
-export CHANNEL = channel-47
+export JUNO_CHANNEL = channel-47
 
 ########################
 ## OSMOSIS Mainnet    ##
 ########################
-export OSMONODE = https://rpc.osmosis.zone:443
+export OSMONODE = https://osmosis-rpc.polkachu.com:443
+export OSMO_CHANNEL = channel-169
 # IBCDENOM is the denomination of NRIDE tokens on OSMOSIS sent throught the 
 # CW20-ICS20 channel configured above
 export IBCDENOM = ibc/E750D31033DC1CF4A044C3AA0A8117401316DC918FBEBC4E3D34F91B09D5F54C
@@ -179,7 +180,10 @@ ics20-channels:
 	./scripts/ics20-channels.sh
 
 ics20-channel:
-	./scripts/ics20-channel.sh $(CHANNEL)
+	./scripts/ics20-channel.sh $(JUNO_CHANNEL)
 
 ics20-transfer:
-	./scripts/ics20-transfer.sh $(from) $(to) $(amount) $(CHANNEL)
+	./scripts/ics20-transfer.sh $(from) $(to) $(amount) $(JUNO_CHANNEL)
+
+ics20-redeem:
+	./scripts/ics20-redeem.sh $(from) $(to) $(amount) $(OSMO_CHANNEL)
