@@ -12,12 +12,6 @@ pub struct Record {
      
 pub const RECORDS: Map<Addr, Record> = Map::new("registry");
 
-pub fn all_records(storage: &dyn Storage) -> StdResult<Vec<Addr>> {
-    RECORDS
-        .keys(storage, None, None, Order::Ascending)
-        .collect()
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
