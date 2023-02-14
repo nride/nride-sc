@@ -169,7 +169,7 @@ native-balance:
 	./scripts/native-balance.sh $(addr)
 
 native-send:
-	./scripts/native-send.sh $(to)
+	./scripts/native-send.sh $(to) $(amount)
 
 native-balance-osmo:
 	./scripts/native-balance-osmo.sh $(acc)

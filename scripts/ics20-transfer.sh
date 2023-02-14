@@ -10,12 +10,6 @@ CHANNEL=$4
 
 TRANSFER_CONTENT='{"channel":"'$CHANNEL'","remote_address":"'$TO'"}';
 
-# TRANSFER_MSG='{"transferxx":'"$TRANSFER_CONTENT"'}';
-
-# echo "$TRANSFER_MSG"
-
-# MSG=$(echo "$TRANSFER_MSG" | base64);
-
 MSG=$(echo "$TRANSFER_CONTENT" | base64);
 
 SEND_CONTENT='{'\
