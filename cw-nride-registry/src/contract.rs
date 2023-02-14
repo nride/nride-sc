@@ -50,8 +50,6 @@ pub fn execute_subscribe(
         location: msg.location,
     };
 
-    
-
     RECORDS.save(
             deps.storage,
             sender.clone(),
@@ -60,9 +58,9 @@ pub fn execute_subscribe(
 
     let res = Response::new().add_attributes(vec![
         ("action", "subscribe"),
-         ("reg_addr", record.reg_addr.as_str()),
-         ("nkn_addr", record.nkn_addr.as_str()),
-         ("location", record.location.as_str())]);
+        ("reg_addr", record.reg_addr.as_str()),
+        ("nkn_addr", record.nkn_addr.as_str()),
+        ("location", record.location.as_str())]);
 
     Ok(res)
 }
@@ -73,4 +71,64 @@ pub fn query(_deps: Deps, _env: Env, _msg: QueryMsg) -> StdResult<Binary> {
 }
 
 #[cfg(test)]
-mod tests {}
+mod tests {
+    use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info};
+    use cosmwasm_std::{ Uint128, Timestamp};
+
+    use super::*;
+
+    fn get_instantiate_msg() -> (MessageInfo, InstantiateMsg) {
+        let instantiate_msg = InstantiateMsg {};
+        let info = mock_info(&String::from("anyone"), &[]);
+        return (info, instantiate_msg);
+    }
+
+    #[test]
+    fn happy_path() {
+        let mut deps = mock_dependencies();
+
+        // instantiate an empty contract
+        let (info, instantiate_msg) = get_instantiate_msg();
+        let res = instantiate(deps.as_mut(), mock_env(), info, instantiate_msg).unwrap();
+        assert_eq!(0, res.messages.len());
+
+        let subscribe_msg = SubscribeMsg{
+            nkn_addr: "caput mundi".to_string(),
+            location: "roma".to_string(),
+        };
+
+        let execute_msg = ExecuteMsg::Subscribe(subscribe_msg);
+
+        let res = execute(
+            deps.as_mut(),
+             mock_env(),
+             mock_info("alice",  &[]),
+            execute_msg,
+        ).unwrap();
+        assert_eq!(0, res.messages.len());
+        assert_eq!(("action", "subscribe"), res.attributes[0]);
+        assert_eq!(("reg_addr", "alice"), res.attributes[1]);
+        assert_eq!(("nkn_addr", "caput mundi"), res.attributes[2]);
+        assert_eq!(("location", "roma"), res.attributes[3]);
+
+        let subscribe_msg_2 = SubscribeMsg{
+            nkn_addr: "ville de l'amour".to_string(),
+            location: "paris".to_string(),
+        };
+
+        let execute_msg_2 = ExecuteMsg::Subscribe(subscribe_msg_2);
+
+        let res = execute(
+            deps.as_mut(),
+             mock_env(),
+             mock_info("alice",  &[]),
+            execute_msg_2,
+        ).unwrap();
+        assert_eq!(0, res.messages.len());
+        assert_eq!(("action", "subscribe"), res.attributes[0]);
+        assert_eq!(("reg_addr", "alice"), res.attributes[1]);
+        assert_eq!(("nkn_addr", "ville de l'amour"), res.attributes[2]);
+        assert_eq!(("location", "paris"), res.attributes[3]);
+    }
+
+}
