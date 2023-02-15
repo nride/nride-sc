@@ -15,5 +15,14 @@ pub struct SubscribeMsg {
 }
 
 #[cw_serde]
-#[derive(QueryResponses)]
-pub enum QueryMsg {}
+pub enum QueryMsg {
+    // Returns a list of nkn addresses subscribed to a given location
+    List {location: String},
+    // Returns the record for a given registry address
+    Details {address: String},
+}
+
+pub struct ListResponse {
+    pub records: Vec<String>,
+}
+

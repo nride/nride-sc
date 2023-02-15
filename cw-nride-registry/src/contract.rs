@@ -1,11 +1,13 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
-use cosmwasm_std::{Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult, Addr};
+use cosmwasm_std::{Deps, DepsMut, Env, MessageInfo, Addr};
+use cosmwasm_std::{Response, StdResult, StdError };
+use cosmwasm_std::{Binary, to_binary};
 use cw2::set_contract_version;
 
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg, SubscribeMsg};
-use crate::state::{Record, RECORDS};
+use crate::state::{Record, records};
 
 // version info for migration info
 const CONTRACT_NAME: &str = "crates.io:cw-nride-registry";
@@ -50,9 +52,9 @@ pub fn execute_subscribe(
         location: msg.location,
     };
 
-    RECORDS.save(
+    records().save(
             deps.storage,
-            sender.clone(),
+            sender,
             &record,    
     )?;
 
@@ -66,8 +68,20 @@ pub fn execute_subscribe(
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
-pub fn query(_deps: Deps, _env: Env, _msg: QueryMsg) -> StdResult<Binary> {
-    unimplemented!()
+pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
+    match msg {
+        QueryMsg::List { location } => to_binary(&query_list(deps, location)?),
+        QueryMsg::Details { address } =>to_binary(&query_details(deps, address)?),
+    }
+}
+
+fn query_details(deps: Deps, address: String) -> StdResult<Binary> {
+    Err(StdError::generic_err("not implemented"))
+}
+
+
+fn query_list(deps: Deps, location: String) -> StdResult<Binary> {
+    Err(StdError::generic_err("not implemented"))
 }
 
 #[cfg(test)]
