@@ -46,6 +46,8 @@ export OSMO_CHANNEL = channel-169
 # IBCDENOM is the denomination of NRIDE tokens on OSMOSIS sent throught the 
 # CW20-ICS20 channel configured above
 export IBCDENOM = ibc/E750D31033DC1CF4A044C3AA0A8117401316DC918FBEBC4E3D34F91B09D5F54C
+# OSMO_POOL is the ID of the NRIDE/OSMO pool on Osmosis
+export OSMO_POOL = 924
 
 ################
 ## Demo Locks ##
@@ -187,3 +189,17 @@ ics20-transfer:
 
 ics20-redeem:
 	./scripts/ics20-redeem.sh $(from) $(to) $(amount) $(OSMO_CHANNEL)
+
+#############################
+
+lp-create:
+	./scripts/lp-create.sh $(config) $(acc)
+
+lp-info:
+	./scripts/lp-info.sh $(OSMO_POOL)
+
+lp-spot:
+	./scripts/lp-spot.sh $(OSMO_POOL) uosmo $(IBCDENOM)
+
+lp-liquidity:
+	./scripts/lp-liquidity.sh $(OSMO_POOL)
