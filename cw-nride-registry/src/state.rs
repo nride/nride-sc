@@ -1,6 +1,6 @@
 use cosmwasm_schema::cw_serde;
-use cosmwasm_std::{Addr, Order, StdResult, StdError, Storage};
-use cw_storage_plus::{Map, MultiIndex, Index, IndexList, IndexedMap};
+use cosmwasm_std::{Addr};
+use cw_storage_plus::{MultiIndex, Index, IndexList, IndexedMap};
 
 
 #[cw_serde]
@@ -37,7 +37,8 @@ mod tests {
     use super::*;
   
     use cosmwasm_std::testing::MockStorage;
-
+    use cosmwasm_std::Order;
+    
     #[test]
     fn add_records() {
         let mut storage = MockStorage::new();
@@ -79,7 +80,7 @@ mod tests {
             },
         ).unwrap();
         
-        
+
         let ids = records()
             .keys(&storage, None, None, Order::Ascending)
             .collect::<Result<Vec<Addr>,_>>()

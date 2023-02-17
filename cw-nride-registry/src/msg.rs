@@ -22,7 +22,3 @@ pub enum QueryMsg {
     Details {address: String},
 }
 
-pub struct ListResponse {
-    pub records: Vec<String>,
-}
-

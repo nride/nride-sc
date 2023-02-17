@@ -3,6 +3,7 @@ use cosmwasm_std::entry_point;
 use cosmwasm_std::{Deps, DepsMut, Env, MessageInfo, Addr};
 use cosmwasm_std::{Response, StdResult, StdError };
 use cosmwasm_std::{Binary, to_binary};
+use cosmwasm_std::Order;
 use cw2::set_contract_version;
 
 use crate::error::ContractError;
@@ -75,13 +76,22 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     }
 }
 
-fn query_details(deps: Deps, address: String) -> StdResult<Binary> {
-    Err(StdError::generic_err("not implemented"))
+fn query_details(deps: Deps, address: String) -> StdResult<Record> {
+    let addr = deps.api.addr_validate(&address)?;
+    let record = records().load(deps.storage, &addr)?;
+    Ok(record)
 }
 
 
-fn query_list(deps: Deps, location: String) -> StdResult<Binary> {
-    Err(StdError::generic_err("not implemented"))
+fn query_list(deps: Deps, location: String) -> StdResult<Vec<Record>> {
+    let records: Vec<Record> = records()
+        .idx
+        .location
+        .prefix(location)
+        .range(deps.storage, None, None, Order::Ascending)
+        .map(|r| r.map(|(_,v)| v))
+        .collect::<StdResult<Vec<Record>>>()?;
+    Ok(records)
 }
 
 #[cfg(test)]
@@ -98,7 +108,7 @@ mod tests {
     }
 
     #[test]
-    fn happy_path() {
+    fn add_and_update() {
         let mut deps = mock_dependencies();
 
         // instantiate an empty contract
@@ -107,7 +117,7 @@ mod tests {
         assert_eq!(0, res.messages.len());
 
         let subscribe_msg = SubscribeMsg{
-            nkn_addr: "caput mundi".to_string(),
+            nkn_addr: "colosseo".to_string(),
             location: "roma".to_string(),
         };
 
@@ -122,12 +132,25 @@ mod tests {
         assert_eq!(0, res.messages.len());
         assert_eq!(("action", "subscribe"), res.attributes[0]);
         assert_eq!(("reg_addr", "alice"), res.attributes[1]);
-        assert_eq!(("nkn_addr", "caput mundi"), res.attributes[2]);
+        assert_eq!(("nkn_addr", "colosseo"), res.attributes[2]);
         assert_eq!(("location", "roma"), res.attributes[3]);
 
+        let details = query_details(
+            deps.as_ref(),
+            "alice".to_string(),
+        ).unwrap();
+        assert_eq!(
+            details,
+            Record{
+                reg_addr: Addr::unchecked("alice"),
+                nkn_addr: "colosseo".to_string(),
+                location: "roma".to_string(),
+            },
+        );
+
         let subscribe_msg_2 = SubscribeMsg{
-            nkn_addr: "ville de l'amour".to_string(),
-            location: "paris".to_string(),
+            nkn_addr: "piccadilly".to_string(),
+            location: "london".to_string(),
         };
 
         let execute_msg_2 = ExecuteMsg::Subscribe(subscribe_msg_2);
@@ -141,8 +164,79 @@ mod tests {
         assert_eq!(0, res.messages.len());
         assert_eq!(("action", "subscribe"), res.attributes[0]);
         assert_eq!(("reg_addr", "alice"), res.attributes[1]);
-        assert_eq!(("nkn_addr", "ville de l'amour"), res.attributes[2]);
-        assert_eq!(("location", "paris"), res.attributes[3]);
+        assert_eq!(("nkn_addr", "piccadilly"), res.attributes[2]);
+        assert_eq!(("location", "london"), res.attributes[3]);
+
+        let details = query_details(
+            deps.as_ref(),
+            "alice".to_string(),
+        ).unwrap();
+        assert_eq!(
+            details,
+            Record{
+                reg_addr: Addr::unchecked("alice"),
+                nkn_addr: "piccadilly".to_string(),
+                location: "london".to_string(),
+            },
+        );
     }
 
+    #[test]
+    fn by_location() {
+        let mut deps = mock_dependencies();
+
+        // instantiate an empty contract
+        let (info, instantiate_msg) = get_instantiate_msg();
+        let res = instantiate(deps.as_mut(), mock_env(), info, instantiate_msg).unwrap();
+        assert_eq!(0, res.messages.len());
+
+        execute(
+            deps.as_mut(),
+             mock_env(),
+             mock_info("alice",  &[]),
+             ExecuteMsg::Subscribe(SubscribeMsg{
+                nkn_addr: "colosseo".to_string(),
+                location: "roma".to_string(),
+            }),
+        ).unwrap();
+        execute(
+            deps.as_mut(),
+             mock_env(),
+             mock_info("bob",  &[]),
+             ExecuteMsg::Subscribe(SubscribeMsg{
+                nkn_addr: "trastevere".to_string(),
+                location: "roma".to_string(),
+            }),
+        ).unwrap();
+        execute(
+            deps.as_mut(),
+             mock_env(),
+             mock_info("charlie",  &[]),
+             ExecuteMsg::Subscribe(SubscribeMsg{
+                nkn_addr: "piccadilly".to_string(),
+                location: "london".to_string(),
+            }),
+        ).unwrap();
+
+        let records = query_list(
+            deps.as_ref(),
+            "roma".to_string(),
+        ).unwrap();
+        assert_eq!(records.len(), 2);
+        assert_eq!(
+            records,
+            vec![
+                Record{
+                    reg_addr: Addr::unchecked("alice"),
+                    nkn_addr: "colosseo".to_string(),
+                    location: "roma".to_string(),
+                },
+                Record{
+                    reg_addr: Addr::unchecked("bob"),
+                    nkn_addr: "trastevere".to_string(),
+                    location: "roma".to_string(),
+                },
+            ],
+        ); 
+    }
 }
