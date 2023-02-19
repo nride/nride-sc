@@ -1,0 +1,11 @@
+/Users/martin/playground/nride-sc/cw-nride-registry/target/debug/deps/cosmwasm_schema-fa5acc0cc7dfd954.rmeta: /Users/martin/.cargo/registry/src/github.com-1ecc6299db9ec823/cosmwasm-schema-1.2.1/src/lib.rs /Users/martin/.cargo/registry/src/github.com-1ecc6299db9ec823/cosmwasm-schema-1.2.1/src/casing.rs /Users/martin/.cargo/registry/src/github.com-1ecc6299db9ec823/cosmwasm-schema-1.2.1/src/export.rs /Users/martin/.cargo/registry/src/github.com-1ecc6299db9ec823/cosmwasm-schema-1.2.1/src/idl.rs /Users/martin/.cargo/registry/src/github.com-1ecc6299db9ec823/cosmwasm-schema-1.2.1/src/query_response.rs /Users/martin/.cargo/registry/src/github.com-1ecc6299db9ec823/cosmwasm-schema-1.2.1/src/remove.rs /Users/martin/.cargo/registry/src/github.com-1ecc6299db9ec823/cosmwasm-schema-1.2.1/src/schema_for.rs
+
+/Users/martin/playground/nride-sc/cw-nride-registry/target/debug/deps/cosmwasm_schema-fa5acc0cc7dfd954.d: /Users/martin/.cargo/registry/src/github.com-1ecc6299db9ec823/cosmwasm-schema-1.2.1/src/lib.rs /Users/martin/.cargo/registry/src/github.com-1ecc6299db9ec823/cosmwasm-schema-1.2.1/src/casing.rs /Users/martin/.cargo/registry/src/github.com-1ecc6299db9ec823/cosmwasm-schema-1.2.1/src/export.rs /Users/martin/.cargo/registry/src/github.com-1ecc6299db9ec823/cosmwasm-schema-1.2.1/src/idl.rs /Users/martin/.cargo/registry/src/github.com-1ecc6299db9ec823/cosmwasm-schema-1.2.1/src/query_response.rs /Users/martin/.cargo/registry/src/github.com-1ecc6299db9ec823/cosmwasm-schema-1.2.1/src/remove.rs /Users/martin/.cargo/registry/src/github.com-1ecc6299db9ec823/cosmwasm-schema-1.2.1/src/schema_for.rs
+
+/Users/martin/.cargo/registry/src/github.com-1ecc6299db9ec823/cosmwasm-schema-1.2.1/src/lib.rs:
+/Users/martin/.cargo/registry/src/github.com-1ecc6299db9ec823/cosmwasm-schema-1.2.1/src/casing.rs:
+/Users/martin/.cargo/registry/src/github.com-1ecc6299db9ec823/cosmwasm-schema-1.2.1/src/export.rs:
+/Users/martin/.cargo/registry/src/github.com-1ecc6299db9ec823/cosmwasm-schema-1.2.1/src/idl.rs:
+/Users/martin/.cargo/registry/src/github.com-1ecc6299db9ec823/cosmwasm-schema-1.2.1/src/query_response.rs:
+/Users/martin/.cargo/registry/src/github.com-1ecc6299db9ec823/cosmwasm-schema-1.2.1/src/remove.rs:
+/Users/martin/.cargo/registry/src/github.com-1ecc6299db9ec823/cosmwasm-schema-1.2.1/src/schema_for.rs:

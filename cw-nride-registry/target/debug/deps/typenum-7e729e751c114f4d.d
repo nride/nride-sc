@@ -1,0 +1,18 @@
+/Users/martin/playground/nride-sc/cw-nride-registry/target/debug/deps/typenum-7e729e751c114f4d.rmeta: /Users/martin/.cargo/registry/src/github.com-1ecc6299db9ec823/typenum-1.16.0/src/lib.rs /Users/martin/.cargo/registry/src/github.com-1ecc6299db9ec823/typenum-1.16.0/src/bit.rs /Users/martin/.cargo/registry/src/github.com-1ecc6299db9ec823/typenum-1.16.0/src/int.rs /Users/martin/.cargo/registry/src/github.com-1ecc6299db9ec823/typenum-1.16.0/src/marker_traits.rs /Users/martin/.cargo/registry/src/github.com-1ecc6299db9ec823/typenum-1.16.0/src/operator_aliases.rs /Users/martin/.cargo/registry/src/github.com-1ecc6299db9ec823/typenum-1.16.0/src/private.rs /Users/martin/.cargo/registry/src/github.com-1ecc6299db9ec823/typenum-1.16.0/src/type_operators.rs /Users/martin/.cargo/registry/src/github.com-1ecc6299db9ec823/typenum-1.16.0/src/uint.rs /Users/martin/.cargo/registry/src/github.com-1ecc6299db9ec823/typenum-1.16.0/src/array.rs /Users/martin/playground/nride-sc/cw-nride-registry/target/debug/build/typenum-357adf0e2ae4b6a6/out/op.rs /Users/martin/playground/nride-sc/cw-nride-registry/target/debug/build/typenum-357adf0e2ae4b6a6/out/consts.rs
+
+/Users/martin/playground/nride-sc/cw-nride-registry/target/debug/deps/typenum-7e729e751c114f4d.d: /Users/martin/.cargo/registry/src/github.com-1ecc6299db9ec823/typenum-1.16.0/src/lib.rs /Users/martin/.cargo/registry/src/github.com-1ecc6299db9ec823/typenum-1.16.0/src/bit.rs /Users/martin/.cargo/registry/src/github.com-1ecc6299db9ec823/typenum-1.16.0/src/int.rs /Users/martin/.cargo/registry/src/github.com-1ecc6299db9ec823/typenum-1.16.0/src/marker_traits.rs /Users/martin/.cargo/registry/src/github.com-1ecc6299db9ec823/typenum-1.16.0/src/operator_aliases.rs /Users/martin/.cargo/registry/src/github.com-1ecc6299db9ec823/typenum-1.16.0/src/private.rs /Users/martin/.cargo/registry/src/github.com-1ecc6299db9ec823/typenum-1.16.0/src/type_operators.rs /Users/martin/.cargo/registry/src/github.com-1ecc6299db9ec823/typenum-1.16.0/src/uint.rs /Users/martin/.cargo/registry/src/github.com-1ecc6299db9ec823/typenum-1.16.0/src/array.rs /Users/martin/playground/nride-sc/cw-nride-registry/target/debug/build/typenum-357adf0e2ae4b6a6/out/op.rs /Users/martin/playground/nride-sc/cw-nride-registry/target/debug/build/typenum-357adf0e2ae4b6a6/out/consts.rs
+
+/Users/martin/.cargo/registry/src/github.com-1ecc6299db9ec823/typenum-1.16.0/src/lib.rs:
+/Users/martin/.cargo/registry/src/github.com-1ecc6299db9ec823/typenum-1.16.0/src/bit.rs:
+/Users/martin/.cargo/registry/src/github.com-1ecc6299db9ec823/typenum-1.16.0/src/int.rs:
+/Users/martin/.cargo/registry/src/github.com-1ecc6299db9ec823/typenum-1.16.0/src/marker_traits.rs:
+/Users/martin/.cargo/registry/src/github.com-1ecc6299db9ec823/typenum-1.16.0/src/operator_aliases.rs:
+/Users/martin/.cargo/registry/src/github.com-1ecc6299db9ec823/typenum-1.16.0/src/private.rs:
+/Users/martin/.cargo/registry/src/github.com-1ecc6299db9ec823/typenum-1.16.0/src/type_operators.rs:
+/Users/martin/.cargo/registry/src/github.com-1ecc6299db9ec823/typenum-1.16.0/src/uint.rs:
+/Users/martin/.cargo/registry/src/github.com-1ecc6299db9ec823/typenum-1.16.0/src/array.rs:
+/Users/martin/playground/nride-sc/cw-nride-registry/target/debug/build/typenum-357adf0e2ae4b6a6/out/op.rs:
+/Users/martin/playground/nride-sc/cw-nride-registry/target/debug/build/typenum-357adf0e2ae4b6a6/out/consts.rs:
+
+# env-dep:TYPENUM_BUILD_CONSTS=/Users/martin/playground/nride-sc/cw-nride-registry/target/debug/build/typenum-357adf0e2ae4b6a6/out/consts.rs
+# env-dep:TYPENUM_BUILD_OP=/Users/martin/playground/nride-sc/cw-nride-registry/target/debug/build/typenum-357adf0e2ae4b6a6/out/op.rs

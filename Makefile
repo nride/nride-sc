@@ -203,3 +203,6 @@ lp-spot:
 
 lp-liquidity:
 	./scripts/lp-liquidity.sh $(OSMO_POOL)
+
+lp-share:
+	./scripts/lp-share.sh $(OSMO_POOL)

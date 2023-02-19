@@ -1,0 +1,12 @@
+/Users/martin/playground/nride-sc/cw-nride-registry/target/debug/deps/signature-452bcb966890c3c8.rmeta: /Users/martin/.cargo/registry/src/github.com-1ecc6299db9ec823/signature-1.6.4/src/lib.rs /Users/martin/.cargo/registry/src/github.com-1ecc6299db9ec823/signature-1.6.4/src/hazmat.rs /Users/martin/.cargo/registry/src/github.com-1ecc6299db9ec823/signature-1.6.4/src/error.rs /Users/martin/.cargo/registry/src/github.com-1ecc6299db9ec823/signature-1.6.4/src/keypair.rs /Users/martin/.cargo/registry/src/github.com-1ecc6299db9ec823/signature-1.6.4/src/signature.rs /Users/martin/.cargo/registry/src/github.com-1ecc6299db9ec823/signature-1.6.4/src/signer.rs /Users/martin/.cargo/registry/src/github.com-1ecc6299db9ec823/signature-1.6.4/src/verifier.rs /Users/martin/.cargo/registry/src/github.com-1ecc6299db9ec823/signature-1.6.4/src/../README.md
+
+/Users/martin/playground/nride-sc/cw-nride-registry/target/debug/deps/signature-452bcb966890c3c8.d: /Users/martin/.cargo/registry/src/github.com-1ecc6299db9ec823/signature-1.6.4/src/lib.rs /Users/martin/.cargo/registry/src/github.com-1ecc6299db9ec823/signature-1.6.4/src/hazmat.rs /Users/martin/.cargo/registry/src/github.com-1ecc6299db9ec823/signature-1.6.4/src/error.rs /Users/martin/.cargo/registry/src/github.com-1ecc6299db9ec823/signature-1.6.4/src/keypair.rs /Users/martin/.cargo/registry/src/github.com-1ecc6299db9ec823/signature-1.6.4/src/signature.rs /Users/martin/.cargo/registry/src/github.com-1ecc6299db9ec823/signature-1.6.4/src/signer.rs /Users/martin/.cargo/registry/src/github.com-1ecc6299db9ec823/signature-1.6.4/src/verifier.rs /Users/martin/.cargo/registry/src/github.com-1ecc6299db9ec823/signature-1.6.4/src/../README.md
+
+/Users/martin/.cargo/registry/src/github.com-1ecc6299db9ec823/signature-1.6.4/src/lib.rs:
+/Users/martin/.cargo/registry/src/github.com-1ecc6299db9ec823/signature-1.6.4/src/hazmat.rs:
+/Users/martin/.cargo/registry/src/github.com-1ecc6299db9ec823/signature-1.6.4/src/error.rs:
+/Users/martin/.cargo/registry/src/github.com-1ecc6299db9ec823/signature-1.6.4/src/keypair.rs:
+/Users/martin/.cargo/registry/src/github.com-1ecc6299db9ec823/signature-1.6.4/src/signature.rs:
+/Users/martin/.cargo/registry/src/github.com-1ecc6299db9ec823/signature-1.6.4/src/signer.rs:
+/Users/martin/.cargo/registry/src/github.com-1ecc6299db9ec823/signature-1.6.4/src/verifier.rs:
+/Users/martin/.cargo/registry/src/github.com-1ecc6299db9ec823/signature-1.6.4/src/../README.md:

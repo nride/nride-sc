@@ -1,0 +1,3 @@
+cargo:rerun-if-changed=build/main.rs
+cargo:rustc-env=TYPENUM_BUILD_CONSTS=/Users/martin/playground/nride-sc/cw-nride-registry/target/wasm32-unknown-unknown/release/build/typenum-0a30269a29c63c05/out/consts.rs
+cargo:rustc-env=TYPENUM_BUILD_OP=/Users/martin/playground/nride-sc/cw-nride-registry/target/wasm32-unknown-unknown/release/build/typenum-0a30269a29c63c05/out/op.rs

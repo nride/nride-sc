@@ -1,0 +1,3 @@
+cargo:rerun-if-changed=build/main.rs
+cargo:rustc-env=TYPENUM_BUILD_CONSTS=/Users/martin/playground/nride-sc/cw-nride-registry/target/debug/build/typenum-357adf0e2ae4b6a6/out/consts.rs
+cargo:rustc-env=TYPENUM_BUILD_OP=/Users/martin/playground/nride-sc/cw-nride-registry/target/debug/build/typenum-357adf0e2ae4b6a6/out/op.rs
