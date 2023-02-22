@@ -18,18 +18,18 @@ To compile:
 make compile-cw20
 ```
 
-## I4I Escrow 
+## Escrow 
 
-The i4i escrow smart-contract implements an advanced escrow mechanism suitable
+The escrow smart-contract implements an advanced escrow mechanism suitable
 for p2p transactions.
 
 To compile:
 
 ```sh
-make compile-i4i
+make compile-escrow
 ```
 
-More info about the escrow in [cw-i4i](cw-i4i/README.md)
+More info about the escrow in [cw-nride-escrow](cw-nride-escrow/README.md)
 
 ## IBC
 
@@ -99,13 +99,14 @@ https://discord.com/channels/816256689078403103/842073995059003422
 
 4) Install Docker
 
-5) If you haven't done so already, compile both contracts.
+5) If you haven't done so already, compile the three contracts.
 
 Note: this can take a long time
 
 ```
 make compile-cw20
-make compile-i4i
+make compile-escrow
+make compile-registry
 ```
 
 ### Run the local Juno node

@@ -64,8 +64,8 @@ export BOB_SECRET= cde73ee8f8584c54ac455c941f75990f4bff47a4340023e3fd236344e9a7d
 compile-cw20:
 	./scripts/compile-workspace.sh "$(shell pwd)/cw-plus"
 
-compile-i4i:
-	./scripts/compile.sh "$(shell pwd)/cw-i4i"
+compile-escrow:
+	./scripts/compile.sh "$(shell pwd)/cw-nride-escrow"
 
 compile-registry:
 	./scripts/compile.sh "$(shell pwd)/cw-nride-registry"

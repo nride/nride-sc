@@ -56,4 +56,4 @@ json wrt. the defined schema.
 
 ## Preparing the Wasm bytecode for production
 
-Run `make compile-i4i` from root `nride-sc` directory
+Run `make compile-escrow` from root `nride-sc` directory

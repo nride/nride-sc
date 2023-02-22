@@ -1,5 +1,5 @@
 [package]
-name = "cw20-i4i-escrow"
+name = "cw-nride-escrow"
 version = "0.1.0"
 authors = ["Martin Arrivets <arrivets@users.noreply.github.com>"]
 edition = "2021"

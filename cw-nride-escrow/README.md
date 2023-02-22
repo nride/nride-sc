@@ -1,4 +1,4 @@
-# CW20 I4I Escrow
+# NRIDE Escrow
 
 This is an escrow meta-contract that allows multiple users to create independent
 escrows. Each escrow involves two users and has a unique id (for future calls to
