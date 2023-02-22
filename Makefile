@@ -5,11 +5,12 @@ export CMD = junod
 ###########
 ## LOCAL ##
 ###########
-# export NODE = http://localhost:26657
-# export CHAINID = testing
-# export FEETOKEN = ujunox
-# export NRIDE = juno14hj2tavq8fpesdwxxcu44rty3hh90vhujrvcmstl4zr3txmfvw9skjuwg8
-# export ESCROW = juno1nc5tatafv6eyq7llkr2gv50ff9e22mnf70qgjlv737ktmt4eswrq68ev2p
+export NODE = http://localhost:26657
+export CHAINID = testing
+export FEETOKEN = ujunox
+export NRIDE = juno14hj2tavq8fpesdwxxcu44rty3hh90vhujrvcmstl4zr3txmfvw9skjuwg8
+export ESCROW = juno1nc5tatafv6eyq7llkr2gv50ff9e22mnf70qgjlv737ktmt4eswrq68ev2p
+export REGISTRY = juno17p9rzwnnfxcjp32un9ug7yhhzgtkhvl9jfksztgw5uh69wac2pgszu8fr9
 
 ########################
 ## JUNO UNI-5 Testnet ##
@@ -24,19 +25,19 @@ export CMD = junod
 ########################
 ## JUNO Mainnet       ##
 ########################
-export NODE = https://rpc-juno.mib.tech:443
-export CHAINID = juno-1
-export FEETOKEN = ujuno
-# NRIDE is the address of the NRIDE CW20 contract
-export NRIDE = juno1qmlchtmjpvu0cr7u0tad2pq8838h6farrrjzp39eqa9xswg7teussrswlq 
-# ESCROW is the address of the nRide escrow contract
-export ESCROW = juno18a4v5qekm9a5dugfhkgyzv6wcxlys0jwh9p4y7k0hfuf9xvxhaksme8fac
-# ICS20 is the address of the CW20-ICS20 contract that allows sending CW2O tokens
-# through IBC
-export ICS20 = juno1v4887y83d6g28puzvt8cl0f3cdhd3y6y9mpysnsp3k8krdm7l6jqgm0rkn
-# JUNO_CHANNEL is the channel from JUNO to OSMOSIS, linked to the CW20-ICS20 
-# contract above, through which NRIDE tokens are sent to OSMOSIS
-export JUNO_CHANNEL = channel-47
+# export NODE = https://rpc-juno.mib.tech:443
+# export CHAINID = juno-1
+# export FEETOKEN = ujuno
+# # NRIDE is the address of the NRIDE CW20 contract
+# export NRIDE = juno1qmlchtmjpvu0cr7u0tad2pq8838h6farrrjzp39eqa9xswg7teussrswlq 
+# # ESCROW is the address of the nRide escrow contract
+# export ESCROW = juno18a4v5qekm9a5dugfhkgyzv6wcxlys0jwh9p4y7k0hfuf9xvxhaksme8fac
+# # ICS20 is the address of the CW20-ICS20 contract that allows sending CW2O tokens
+# # through IBC
+# export ICS20 = juno1v4887y83d6g28puzvt8cl0f3cdhd3y6y9mpysnsp3k8krdm7l6jqgm0rkn
+# # JUNO_CHANNEL is the channel from JUNO to OSMOSIS, linked to the CW20-ICS20 
+# # contract above, through which NRIDE tokens are sent to OSMOSIS
+# export JUNO_CHANNEL = channel-47
 
 ########################
 ## OSMOSIS Mainnet    ##
@@ -65,6 +66,9 @@ compile-cw20:
 
 compile-i4i:
 	./scripts/compile.sh "$(shell pwd)/cw-i4i"
+
+compile-registry:
+	./scripts/compile.sh "$(shell pwd)/cw-nride-registry"
 
 #############################
 
@@ -206,3 +210,20 @@ lp-liquidity:
 
 lp-share:
 	./scripts/lp-share.sh $(OSMO_POOL)
+
+################################
+
+deploy-registry:
+	./scripts/deploy-registry.sh
+
+init-registry:
+	./scripts/init-registry.sh $(code)
+
+registry-subscribe:
+	./scripts/registry-subscribe.sh $(from) $(nkn) $(location) 
+
+registry-details:
+	./scripts/registry-details.sh $(addr)
+
+registry-list:
+	./scripts/registry-list.sh $(location)
