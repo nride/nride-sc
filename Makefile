@@ -5,12 +5,12 @@ export CMD = junod
 ###########
 ## LOCAL ##
 ###########
-# export NODE = http://localhost:26657
-# export CHAINID = testing
-# export FEETOKEN = ujunox
-# export NRIDE = juno14hj2tavq8fpesdwxxcu44rty3hh90vhujrvcmstl4zr3txmfvw9skjuwg8
-# export ESCROW = juno1nc5tatafv6eyq7llkr2gv50ff9e22mnf70qgjlv737ktmt4eswrq68ev2p
-# export REGISTRY = juno17p9rzwnnfxcjp32un9ug7yhhzgtkhvl9jfksztgw5uh69wac2pgszu8fr9
+export NODE = http://localhost:26657
+export CHAINID = testing
+export FEETOKEN = ujunox
+export NRIDE = juno14hj2tavq8fpesdwxxcu44rty3hh90vhujrvcmstl4zr3txmfvw9skjuwg8
+export ESCROW = juno1nc5tatafv6eyq7llkr2gv50ff9e22mnf70qgjlv737ktmt4eswrq68ev2p
+export REGISTRY = juno17p9rzwnnfxcjp32un9ug7yhhzgtkhvl9jfksztgw5uh69wac2pgszu8fr9
 
 ########################
 ## JUNO UNI-5 Testnet ##
@@ -25,21 +25,21 @@ export CMD = junod
 ########################
 ## JUNO Mainnet       ##
 ########################
-export NODE = https://rpc-juno.mib.tech:443
-export CHAINID = juno-1
-export FEETOKEN = ujuno
-# NRIDE is the address of the NRIDE CW20 contract
-export NRIDE = juno1qmlchtmjpvu0cr7u0tad2pq8838h6farrrjzp39eqa9xswg7teussrswlq 
-# ESCROW is the address of the nRide escrow contract
-export ESCROW = juno18a4v5qekm9a5dugfhkgyzv6wcxlys0jwh9p4y7k0hfuf9xvxhaksme8fac
-# REGISTRY is the addres of the nRide registry contract
-export REGISTRY = juno19385sh6ze678s6x49grc08cyqqmkv7djhy3wxqy6hnwc0ykkx9psa74hvc
-# ICS20 is the address of the CW20-ICS20 contract that allows sending CW2O tokens
-# through IBC
-export ICS20 = juno1v4887y83d6g28puzvt8cl0f3cdhd3y6y9mpysnsp3k8krdm7l6jqgm0rkn
-# JUNO_CHANNEL is the channel from JUNO to OSMOSIS, linked to the CW20-ICS20 
-# contract above, through which NRIDE tokens are sent to OSMOSIS
-export JUNO_CHANNEL = channel-47
+# export NODE = https://rpc-juno.mib.tech:443
+# export CHAINID = juno-1
+# export FEETOKEN = ujuno
+# # NRIDE is the address of the NRIDE CW20 contract
+# export NRIDE = juno1qmlchtmjpvu0cr7u0tad2pq8838h6farrrjzp39eqa9xswg7teussrswlq 
+# # ESCROW is the address of the nRide escrow contract
+# export ESCROW = juno18a4v5qekm9a5dugfhkgyzv6wcxlys0jwh9p4y7k0hfuf9xvxhaksme8fac
+# # REGISTRY is the addres of the nRide registry contract
+# export REGISTRY = juno19385sh6ze678s6x49grc08cyqqmkv7djhy3wxqy6hnwc0ykkx9psa74hvc
+# # ICS20 is the address of the CW20-ICS20 contract that allows sending CW2O tokens
+# # through IBC
+# export ICS20 = juno1v4887y83d6g28puzvt8cl0f3cdhd3y6y9mpysnsp3k8krdm7l6jqgm0rkn
+# # JUNO_CHANNEL is the channel from JUNO to OSMOSIS, linked to the CW20-ICS20 
+# # contract above, through which NRIDE tokens are sent to OSMOSIS
+# export JUNO_CHANNEL = channel-47
 
 ########################
 ## OSMOSIS Mainnet    ##
@@ -89,143 +89,146 @@ demo-bootstrap:
 	./scripts/bootstrap.sh
 
 demo-create:
-	./scripts/escrow-create.sh alice test bob $(ALICE_LOCK)
+	./scripts/escrow/escrow-create.sh alice test bob $(ALICE_LOCK)
 
 demo-topup:
-	./scripts/escrow-topup.sh bob test $(BOB_LOCK)
+	./scripts/escrow/escrow-topup.sh bob test $(BOB_LOCK)
 
 demo-approve-alice:
-	./scripts/escrow-approve.sh alice test $(BOB_SECRET)
+	./scripts/escrow/escrow-approve.sh alice test $(BOB_SECRET)
 
 demo-approve-bob:
-	./scripts/escrow-approve.sh bob test $(ALICE_SECRET)
+	./scripts/escrow/escrow-approve.sh bob test $(ALICE_SECRET)
 
 demo-cancel-alice:
-	./scripts/escrow-cancel.sh alice test
+	./scripts/escrow/escrow-cancel.sh alice test
 
 demo-cancel-bob:
-	./scripts/escrow-cancel.sh bob test
+	./scripts/escrow/escrow-cancel.sh bob test
 
 demo-withdraw:
-	./scripts/escrow-withdraw.sh bob test
+	./scripts/escrow/escrow-withdraw.sh bob test
 
 demo-details:
-	./scripts/escrow-details.sh test
+	./scripts/escrow/escrow-details.sh test
 
 #############################
 
 escrow-create:
-	./scripts/escrow-create.sh $(from) $(id) $(userb) $(ALICE_LOCK) 
+	./scripts/escrow/escrow-create.sh $(from) $(id) $(userb) $(ALICE_LOCK) 
 
 escrow-topup:
-	./scripts/escrow-topup.sh $(from) $(id) $(BOB_LOCK)
+	./scripts/escrow/escrow-topup.sh $(from) $(id) $(BOB_LOCK)
 
 escrow-approve:
-	./scripts/escrow-approve.sh $(from) $(id) $(secret)
+	./scripts/escrow/escrow-approve.sh $(from) $(id) $(secret)
 
 escrow-cancel:
-	./scripts/escrow-cancel.sh $(from) $(id)
+	./scripts/escrow/escrow-cancel.sh $(from) $(id)
 
 escrow-withdraw:
-	./scripts/escrow-withdraw.sh $(from) $(id)
+	./scripts/escrow/escrow-withdraw.sh $(from) $(id)
 
 escrow-list:
-	./scripts/escrow-list.sh
+	./scripts/escrow/escrow-list.sh
 
 escrow-details:
-	./scripts/escrow-details.sh $(id)
+	./scripts/escrow/escrow-details.sh $(id)
 
 #############################
 
 deploy-cw20:
-	./scripts/deploy-cw20.sh
+	./scripts/nride-token/deploy-cw20.sh
 
 init-cw20:
-	./scripts/init-cw20.sh $(code)
+	./scripts/nride-token/init-cw20.sh $(code)
 
 deploy-escrow:
-	./scripts/deploy-escrow.sh
+	./scripts/escrow/deploy-escrow.sh
 	
 init-escrow:
-	./scripts/init-escrow.sh $(code)
+	./scripts/escrow/init-escrow.sh $(code)
 
 token-info:
-	./scripts/token-info.sh
+	./scripts/nride-token/token-info.sh
 
 token-balance-list:
-	./scripts/token-balance-list.sh
+	./scripts/nride-token/token-balance-list.sh
 
 token-balance:
-	./scripts/token-balance.sh $(addr)
+	./scripts/nride-token/token-balance.sh $(addr)
 
 token-send:
-	./scripts/token-send.sh $(from) $(to) $(amount)
+	./scripts/nride-token/token-send.sh $(from) $(to) $(amount)
+
+token-send-to:
+	./scripts/nride-token/token-send-to.sh $(from) $(to-addr) $(amount)
 
 token-send-grant:
-	./scripts/token-send-grant.sh $(from) $(to) $(amount)
+	./scripts/nride-token/token-send-grant.sh $(from) $(to) $(amount)
 
 feegrant-list:
-	./scripts/feegrant-list.sh $(acc)
+	./scripts/feegrant/feegrant-list.sh $(acc)
 
 feegrant-create:
-	./scripts/feegrant-create.sh $(acc)
+	./scripts/feegrant/feegrant-create.sh $(acc)
 
 feegrant-revoke:
-	./scripts/feegrant-revoke.sh $(acc)
+	./scripts/feegrant/feegrant-revoke.sh $(acc)
 
 native-balance:
-	./scripts/native-balance.sh $(addr)
+	./scripts/native-token/native-balance.sh $(addr)
 
 native-send:
-	./scripts/native-send.sh $(to) $(amount)
+	./scripts/native-token/native-send.sh $(to) $(amount)
 
 native-balance-osmo:
-	./scripts/native-balance-osmo.sh $(acc)
+	./scripts/native-token/native-balance-osmo.sh $(acc)
 
 #############################
 
 ics20-channels:
-	./scripts/ics20-channels.sh
+	./scripts/ibc/ics20-channels.sh
 
 ics20-channel:
-	./scripts/ics20-channel.sh $(JUNO_CHANNEL)
+	./scripts/ibc/ics20-channel.sh $(JUNO_CHANNEL)
 
 ics20-transfer:
-	./scripts/ics20-transfer.sh $(from) $(to) $(amount) $(JUNO_CHANNEL)
+	./scripts/ibc/ics20-transfer.sh $(from) $(to) $(amount) $(JUNO_CHANNEL)
 
 ics20-redeem:
-	./scripts/ics20-redeem.sh $(from) $(to) $(amount) $(OSMO_CHANNEL)
+	./scripts/ibc/ics20-redeem.sh $(from) $(to) $(amount) $(OSMO_CHANNEL)
 
 #############################
 
 lp-create:
-	./scripts/lp-create.sh $(config) $(acc)
+	./scripts/lp/lp-create.sh $(config) $(acc)
 
 lp-info:
-	./scripts/lp-info.sh $(OSMO_POOL)
+	./scripts/lp/lp-info.sh $(OSMO_POOL)
 
 lp-spot:
-	./scripts/lp-spot.sh $(OSMO_POOL) uosmo $(IBCDENOM)
+	./scripts/lp/lp-spot.sh $(OSMO_POOL) uosmo $(IBCDENOM)
 
 lp-liquidity:
-	./scripts/lp-liquidity.sh $(OSMO_POOL)
+	./scripts/lp/lp-liquidity.sh $(OSMO_POOL)
 
 lp-share:
-	./scripts/lp-share.sh $(OSMO_POOL)
+	./scripts/lp/lp-share.sh $(OSMO_POOL)
 
 ################################
 
 deploy-registry:
-	./scripts/deploy-registry.sh
+	./scripts/registry/deploy-registry.sh
 
 init-registry:
-	./scripts/init-registry.sh $(code)
+	./scripts/registry/init-registry.sh $(code)
 
 registry-subscribe:
-	./scripts/registry-subscribe.sh $(from) $(nkn) $(location) 
+	./scripts/registry/registry-subscribe.sh $(from) $(nkn) $(location) 
 
 registry-details:
-	./scripts/registry-details.sh $(addr)
+	./scripts/registry/registry-details.sh $(addr)
 
 registry-list:
-	./scripts/registry-list.sh $(location)
+	./scripts/registry/registry-list.sh $(location)

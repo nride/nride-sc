@@ -170,4 +170,4 @@ counterparty’s secret code and is destined to lose money.
 
 ## Usage
 
-Study the demo and scripts in the [nride-sc root directory](..)
+try the [demo](../README.md#demo) and study the [scripts](../scripts/escrow/)!

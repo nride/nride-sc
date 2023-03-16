@@ -1,8 +1,8 @@
 
 # NRIDE Smart-Contracts
 
-This repo contains the set of smart-contracts that support nRide's token 
-infrastructure
+This repo contains the set of smart-contracts that are used by nRide. This 
+includes the cw20 token, escrow, and driver registry.
 
 ## CW20 Token
 
@@ -30,35 +30,6 @@ make compile-escrow
 ```
 
 More info about the escrow in [cw-nride-escrow](cw-nride-escrow/README.md)
-
-## IBC
-
-Send 10 NRIDE tokens from `faucet` account on JUNO to `osmo-faucet` account on OSMOSIS via IBC:
-
-```
-make ics20-transfer from=$(junod keys show -a faucet) to=$(osmosisd keys show -a osmo-faucet) amount=10
-```
-
-Check balances:
-
-```
-make native-balance-osmo acc=osmo-faucet
-
-balances:
-- amount: "10"
-  denom: ibc/E750D31033DC1CF4A044C3AA0A8117401316DC918FBEBC4E3D34F91B09D5F54C
-- amount: "9997847"
-  denom: uosmo
-pagination:
-  next_key: null
-  total: "0"
-```
-
-Send tokens back:
-
-```
-make ics20-redeem from=$(osmosisd keys show -a osmo-faucet) to=$(junod keys show -a faucet) amount=5 
-```
 
 ## Demo
 
@@ -123,16 +94,53 @@ make demo-bootstrap
 
 ### Test happy case
 
+1) Alice creates an escrow with Bob as counterparty
+
 ```
 make demo-create
-make demo-topup
-make demo-approve-alice
-make demo-approve-bob
-make demo-withdraw
-make demo-details
 ```
 
-Note: run `make demo-details` at any time to query the escrow state
+Note: 
+> at any time in this demo, run `make demo-details` and `make token-balalance-list`
+> to see what is happening with the escrow and with the user balances.
+
+
+2) Bob tops up the escrow
+
+```
+make demo-topup
+```
+
+3) Alice approves the escrow using bob's secret
+
+This assumes bob shared his secret with alice. The protocol doesn't cover how
+this happens, but it could be by tapping phones, or simply sending it over the
+network.
+
+```
+make demo-approve-alice
+```
+
+4) Bob approves the escrow using alice's secret
+
+```
+make demo-approve-bob
+```
+
+5) Withdraw
+
+Anyone can call withdraw to return funds 
+
+```
+make demo-withdraw
+```
+
+6) See escrow status and balances
+
+```
+make demo-details
+make token-balance-list
+```
 
 ### Have fun!
 
@@ -140,4 +148,15 @@ Try using `make demo-cancel-alice` or `make demo-cancel-bob` to see what
 happens when one of the users cancels. Or try letting the escrow timeout to 
 see what happens.
 
+## Registry
 
+The registry smart-contract implements a database of drivers with their NKN 
+address and location.
+
+To compile:
+
+```
+make compile-registry
+```
+
+More info about the escrow in [cw-nride-registry](cw-nride-registry/README.md)
