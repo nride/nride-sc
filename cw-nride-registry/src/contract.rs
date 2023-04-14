@@ -1,7 +1,7 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{Deps, DepsMut, Env, MessageInfo, Addr};
-use cosmwasm_std::{Response, StdResult, StdError };
+use cosmwasm_std::{Response, StdResult };
 use cosmwasm_std::{Binary, to_binary};
 use cosmwasm_std::Order;
 use cw2::set_contract_version;
@@ -71,7 +71,7 @@ pub fn execute_subscribe(
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
-        QueryMsg::List { location } => to_binary(&query_list(deps, location)?),
+        QueryMsg::List { locations } => to_binary(&query_list(deps, locations)?),
         QueryMsg::Details { address } =>to_binary(&query_details(deps, address)?),
     }
 }
@@ -82,22 +82,24 @@ fn query_details(deps: Deps, address: String) -> StdResult<Record> {
     Ok(record)
 }
 
-
-fn query_list(deps: Deps, location: String) -> StdResult<Vec<Record>> {
-    let records: Vec<Record> = records()
-        .idx
-        .location
-        .prefix(location)
-        .range(deps.storage, None, None, Order::Ascending)
-        .map(|r| r.map(|(_,v)| v))
-        .collect::<StdResult<Vec<Record>>>()?;
-    Ok(records)
+fn query_list(deps: Deps, locations: Vec<String>) -> StdResult<Vec<Record>> {
+    let mut res = Vec::new();
+    for loc in locations.iter() {
+        let loc_items = records()
+            .idx
+            .location
+            .prefix(loc.clone())
+            .range(deps.storage, None, None, Order::Ascending)
+            .map(|r| r.map(|(_,v)| v))
+            .collect::<StdResult<Vec<Record>>>()?;
+        res.extend(loc_items);
+    }
+    Ok(res)
 }
 
 #[cfg(test)]
 mod tests {
     use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info};
-    use cosmwasm_std::{ Uint128, Timestamp};
 
     use super::*;
 
@@ -217,12 +219,21 @@ mod tests {
                 location: "london".to_string(),
             }),
         ).unwrap();
+        execute(
+            deps.as_mut(),
+             mock_env(),
+             mock_info("dennis",  &[]),
+             ExecuteMsg::Subscribe(SubscribeMsg{
+                nkn_addr: "bastille".to_string(),
+                location: "paris".to_string(),
+            }),
+        ).unwrap();
 
         let records = query_list(
             deps.as_ref(),
-            "roma".to_string(),
+            vec!["roma".to_string(), "paris".to_string()],
         ).unwrap();
-        assert_eq!(records.len(), 2);
+        assert_eq!(records.len(), 3);
         assert_eq!(
             records,
             vec![
@@ -235,6 +246,11 @@ mod tests {
                     reg_addr: Addr::unchecked("bob"),
                     nkn_addr: "trastevere".to_string(),
                     location: "roma".to_string(),
+                },
+                Record{
+                    reg_addr: Addr::unchecked("dennis"),
+                    nkn_addr: "bastille".to_string(),
+                    location: "paris".to_string(),
                 },
             ],
         ); 
