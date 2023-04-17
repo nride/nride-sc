@@ -4,7 +4,7 @@ use cosmwasm_std::{Deps, DepsMut, Env, MessageInfo, Addr};
 use cosmwasm_std::{Response, StdResult };
 use cosmwasm_std::{Binary, to_binary};
 use cosmwasm_std::Order;
-use cw2::set_contract_version;
+use cw2::{set_contract_version, get_contract_version};
 
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg, SubscribeMsg};
@@ -23,6 +23,18 @@ pub fn instantiate(
 ) -> Result<Response, ContractError> {
     set_contract_version(_deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
     // no setup
+    Ok(Response::default())
+}
+
+#[cfg_attr(not(feature = "library"), entry_point)]
+pub fn migrate(deps: DepsMut, _env: Env, msg: MigrateMsg) -> Result<Response, ContractError> {
+    let version: Version = CONTRACT_VERSION.parse()?;
+    let storage_version: Version = get_contract_version(deps.storage)?.version.parse()?;
+    if storage_version < version {
+        set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
+        // If state structure changed in any contract version in the way migration is needed, it
+        // should occur here
+    }
     Ok(Response::default())
 }
 
