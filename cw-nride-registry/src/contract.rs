@@ -71,7 +71,8 @@ pub fn execute_subscribe(
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
-        QueryMsg::List { locations } => to_binary(&query_list(deps, locations)?),
+        QueryMsg::List { location } => to_binary(&query_list(deps, vec![location])?),
+        QueryMsg::ListMultiple {locations} => to_binary(&query_list(deps, locations)?), 
         QueryMsg::Details { address } =>to_binary(&query_details(deps, address)?),
     }
 }

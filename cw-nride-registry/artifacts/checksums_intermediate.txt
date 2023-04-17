@@ -1,1 +1,1 @@
-3244789ece738ec441480905d566dac62254602f20f6fe60b470dc6d66669db0  ./target/wasm32-unknown-unknown/release/cw_nride_registry.wasm
+0bfaa311b398710ac14d770431c33dac10c1e73860fdf57a4f3b7d1f8efa34a1  ./target/wasm32-unknown-unknown/release/cw_nride_registry.wasm

@@ -230,5 +230,10 @@ registry-subscribe:
 registry-details:
 	./scripts/registry/registry-details.sh $(addr)
 
+# ex: make registry-list location=paris
 registry-list:
 	./scripts/registry/registry-list.sh $(location)
+
+# ex: make registry-list-multiple locations=paris,london
+registry-list-multiple:
+	./scripts/registry/registry-list-multiple.sh $(locations)	
