@@ -224,11 +224,19 @@ deploy-registry:
 init-registry:
 	./scripts/registry/init-registry.sh $(code)
 
+migrate-registry:
+	./scripts/registry/migrate-registry.sh $(REGISTRY) $(code)
+
 registry-subscribe:
 	./scripts/registry/registry-subscribe.sh $(from) $(nkn) $(location) 
 
 registry-details:
 	./scripts/registry/registry-details.sh $(addr)
 
+# ex: make registry-list location=paris
 registry-list:
 	./scripts/registry/registry-list.sh $(location)
+
+# ex: make registry-list-multiple locations=paris,london
+registry-list-multiple:
+	./scripts/registry/registry-list-multiple.sh $(locations)	

@@ -226,7 +226,7 @@ dependencies = [
 
 [[package]]
 name = "cw-nride-registry"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
@@ -235,6 +235,7 @@ dependencies = [
  "cw-storage-plus",
  "cw2",
  "schemars",
+ "semver",
  "serde",
  "thiserror",
 ]

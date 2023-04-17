@@ -1,13 +1,14 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{Deps, DepsMut, Env, MessageInfo, Addr};
-use cosmwasm_std::{Response, StdResult, StdError };
+use cosmwasm_std::{Response, StdResult };
 use cosmwasm_std::{Binary, to_binary};
 use cosmwasm_std::Order;
-use cw2::set_contract_version;
+use cw2::{set_contract_version, get_contract_version};
+use semver::Version;
 
 use crate::error::ContractError;
-use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg, SubscribeMsg};
+use crate::msg::{ InstantiateMsg, MigrateMsg, ExecuteMsg, SubscribeMsg, QueryMsg };
 use crate::state::{Record, records};
 
 // version info for migration info
@@ -23,6 +24,22 @@ pub fn instantiate(
 ) -> Result<Response, ContractError> {
     set_contract_version(_deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
     // no setup
+    Ok(Response::default())
+}
+
+#[cfg_attr(not(feature = "library"), entry_point)]
+pub fn migrate(
+    deps: DepsMut,
+    _env: Env,
+    _msg: MigrateMsg,
+) -> Result<Response, ContractError> {
+    let version: Version = CONTRACT_VERSION.parse()?;
+    let storage_version: Version = get_contract_version(deps.storage)?.version.parse()?;
+    if storage_version < version {
+        set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
+        // If state structure changed in any contract version in the way migration is needed, it
+        // should occur here
+    }
     Ok(Response::default())
 }
 
@@ -71,7 +88,8 @@ pub fn execute_subscribe(
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
-        QueryMsg::List { location } => to_binary(&query_list(deps, location)?),
+        QueryMsg::List { location } => to_binary(&query_list(deps, vec![location])?),
+        QueryMsg::ListMultiple {locations} => to_binary(&query_list(deps, locations)?), 
         QueryMsg::Details { address } =>to_binary(&query_details(deps, address)?),
     }
 }
@@ -82,22 +100,24 @@ fn query_details(deps: Deps, address: String) -> StdResult<Record> {
     Ok(record)
 }
 
-
-fn query_list(deps: Deps, location: String) -> StdResult<Vec<Record>> {
-    let records: Vec<Record> = records()
-        .idx
-        .location
-        .prefix(location)
-        .range(deps.storage, None, None, Order::Ascending)
-        .map(|r| r.map(|(_,v)| v))
-        .collect::<StdResult<Vec<Record>>>()?;
-    Ok(records)
+fn query_list(deps: Deps, locations: Vec<String>) -> StdResult<Vec<Record>> {
+    let mut res = Vec::new();
+    for loc in locations.iter() {
+        let loc_items = records()
+            .idx
+            .location
+            .prefix(loc.clone())
+            .range(deps.storage, None, None, Order::Ascending)
+            .map(|r| r.map(|(_,v)| v))
+            .collect::<StdResult<Vec<Record>>>()?;
+        res.extend(loc_items);
+    }
+    Ok(res)
 }
 
 #[cfg(test)]
 mod tests {
     use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info};
-    use cosmwasm_std::{ Uint128, Timestamp};
 
     use super::*;
 
@@ -217,12 +237,21 @@ mod tests {
                 location: "london".to_string(),
             }),
         ).unwrap();
+        execute(
+            deps.as_mut(),
+             mock_env(),
+             mock_info("dennis",  &[]),
+             ExecuteMsg::Subscribe(SubscribeMsg{
+                nkn_addr: "bastille".to_string(),
+                location: "paris".to_string(),
+            }),
+        ).unwrap();
 
         let records = query_list(
             deps.as_ref(),
-            "roma".to_string(),
+            vec!["roma".to_string(), "paris".to_string()],
         ).unwrap();
-        assert_eq!(records.len(), 2);
+        assert_eq!(records.len(), 3);
         assert_eq!(
             records,
             vec![
@@ -235,6 +264,11 @@ mod tests {
                     reg_addr: Addr::unchecked("bob"),
                     nkn_addr: "trastevere".to_string(),
                     location: "roma".to_string(),
+                },
+                Record{
+                    reg_addr: Addr::unchecked("dennis"),
+                    nkn_addr: "bastille".to_string(),
+                    location: "paris".to_string(),
                 },
             ],
         ); 

@@ -1,6 +1,6 @@
 [package]
 name = "cw-nride-registry"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["martin arrivets <arrivets@gmail.com>"]
 edition = "2021"
 
@@ -48,6 +48,7 @@ cw2 = "1.0.1"
 schemars = "0.8.10"
 serde = { version = "1.0.145", default-features = false, features = ["derive"] }
 thiserror = { version = "1.0.31" }
+semver = "1"
 
 [dev-dependencies]
 cw-multi-test = "0.16.2"

@@ -85,7 +85,6 @@ mod tests {
             .keys(&storage, None, None, Order::Ascending)
             .collect::<Result<Vec<Addr>,_>>()
             .unwrap();
-
         assert_eq!(4, ids.len());
 
         let res = records()
