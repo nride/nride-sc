@@ -5,9 +5,10 @@ use cosmwasm_std::{Response, StdResult };
 use cosmwasm_std::{Binary, to_binary};
 use cosmwasm_std::Order;
 use cw2::{set_contract_version, get_contract_version};
+use semver::Version;
 
 use crate::error::ContractError;
-use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg, SubscribeMsg};
+use crate::msg::{ InstantiateMsg, MigrateMsg, ExecuteMsg, SubscribeMsg, QueryMsg };
 use crate::state::{Record, records};
 
 // version info for migration info
@@ -27,7 +28,11 @@ pub fn instantiate(
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
-pub fn migrate(deps: DepsMut, _env: Env, msg: MigrateMsg) -> Result<Response, ContractError> {
+pub fn migrate(
+    deps: DepsMut,
+    _env: Env,
+    _msg: MigrateMsg,
+) -> Result<Response, ContractError> {
     let version: Version = CONTRACT_VERSION.parse()?;
     let storage_version: Version = get_contract_version(deps.storage)?.version.parse()?;
     if storage_version < version {

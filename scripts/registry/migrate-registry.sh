@@ -2,12 +2,10 @@
 
 set -eux
 
-CODE=$1
+ADDR=$1
+CODE=$2
 
-$CMD tx wasm instantiate $CODE \
-    '{}' \
-    --label "NRIDE REGISTRY INIT" \
-    --admin $($CMD keys show -a faucet) \
+$CMD tx wasm migrate $ADDR $CODE '{}' \
     --from faucet \
     --chain-id $CHAINID \
     --gas-prices 0.1$FEETOKEN \

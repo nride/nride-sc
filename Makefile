@@ -224,6 +224,9 @@ deploy-registry:
 init-registry:
 	./scripts/registry/init-registry.sh $(code)
 
+migrate-registry:
+	./scripts/registry/migrate-registry.sh $(REGISTRY) $(code)
+
 registry-subscribe:
 	./scripts/registry/registry-subscribe.sh $(from) $(nkn) $(location) 
 
