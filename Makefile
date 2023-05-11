@@ -51,6 +51,8 @@ export OSMO_CHANNEL = channel-169
 export IBCDENOM = ibc/E750D31033DC1CF4A044C3AA0A8117401316DC918FBEBC4E3D34F91B09D5F54C
 # OSMO_POOL is the ID of the NRIDE/OSMO pool on Osmosis
 export OSMO_POOL = 924
+# GAUGE_ID is the ID of the incentives gauge in the osmo-nride pool
+export GAUGE_ID =  32110
 
 ################
 ## Demo Locks ##
@@ -215,6 +217,12 @@ lp-liquidity:
 
 lp-share:
 	./scripts/lp/lp-share.sh $(OSMO_POOL)
+
+lp-gauge-info:
+	./scripts/lp/lp-gauge-info.sh $(GAUGE_ID)
+
+lp-gauge-add:
+	./scripts/lp/lp-gauge-add.sh $(acc) $(amount) $(GAUGE_ID)
 
 ################################
 

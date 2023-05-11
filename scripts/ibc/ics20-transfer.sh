@@ -24,7 +24,6 @@ echo $TOKEN_EXECUTE
 
 $CMD tx wasm execute $NRIDE "$TOKEN_EXECUTE" \
 --from $FROM \
---fee-account $($CMD keys show -a faucet) \
 --gas-prices 0.01$FEETOKEN \
 --gas auto \
 --gas-adjustment 1.3 \
