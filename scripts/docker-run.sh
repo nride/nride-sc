@@ -8,7 +8,7 @@ docker run -d \
     -p 9090:9090 \
     -e STAKE_TOKEN=ujunox \
     -e UNSAFE_CORS=true \
-    ghcr.io/cosmoscontracts/juno:v12.0.0 \
+    ghcr.io/cosmoscontracts/juno:main \
     ./setup_and_run.sh $(junod keys show -a faucet)
 
 sleep 5
