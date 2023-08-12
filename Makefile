@@ -170,13 +170,13 @@ token-send-grant:
 	./scripts/nride-token/token-send-grant.sh $(from) $(to) $(amount)
 
 feegrant-list:
-	./scripts/feegrant/feegrant-list.sh $(acc)
+	./scripts/feegrant/feegrant-list.sh $(grantee)
 
 feegrant-create:
-	./scripts/feegrant/feegrant-create.sh $(acc)
+	./scripts/feegrant/feegrant-create.sh $(grantee)
 
 feegrant-revoke:
-	./scripts/feegrant/feegrant-revoke.sh $(acc)
+	./scripts/feegrant/feegrant-revoke.sh $(grantee)
 
 native-balance:
 	./scripts/native-token/native-balance.sh $(addr)

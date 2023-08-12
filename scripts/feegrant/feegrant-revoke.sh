@@ -1,11 +1,16 @@
 #//bin/sh
 
-set -eux 
+source ./scripts/util.sh
 
-$CMD tx feegrant revoke $($CMD keys show -a faucet) $($CMD keys show -a $1) \
---from faucet \
---gas-prices 0.1$FEETOKEN \
---chain-id $CHAINID \
---node $NODE \
--b block \
--y \
+GRANTEE=$1
+
+command=($CMD tx feegrant revoke)
+command+=($($CMD keys show -a faucet))
+command+=($($CMD keys show -a $GRANTEE))
+command+=(--from faucet)
+command+=(--gas-prices 0.1$FEETOKEN)
+command+=(--chain-id $CHAINID)
+command+=(--node $NODE)
+command+=(-y)
+
+execute_tx_block_2 "${command[@]}"
