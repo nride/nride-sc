@@ -1,9 +1,11 @@
 #!/bin/sh
 
+source ./scripts/util.sh
+
 FROM=$1
 ID=$2
 
-$CMD tx wasm execute $ESCROW \
+command="$CMD tx wasm execute $ESCROW \
 '{"cancel":{"id": "'"$ID"'"}}' \
 --from $FROM \
 --fee-account $($CMD keys show -a faucet) \
@@ -13,4 +15,6 @@ $CMD tx wasm execute $ESCROW \
 --chain-id $CHAINID \
 --node $NODE \
 -b block \
--y
+-y"
+
+execute_tx_block "$command"

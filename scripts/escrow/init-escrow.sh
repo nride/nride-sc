@@ -1,18 +1,19 @@
 #!/bin/sh
 
-set -eux
+source ./scripts/util.sh
 
 CODE=$1
 
-$CMD tx wasm instantiate $CODE \
-    '{}' \
-    --label "NRIDE ESCROW INIT" \
-    --no-admin \
-    --from faucet \
-    --chain-id $CHAINID \
-    --gas-prices 0.1$FEETOKEN \
-    --gas auto \
-    --gas-adjustment 1.3 \
-    --node $NODE\
-    -b block \
-    -y 
+command="$CMD tx wasm instantiate $CODE {}" 
+command+=' --label "NRIDE ESCROW INIT"'
+command+=" --no-admin"
+command+=" --from faucet"
+command+=" --chain-id testing"
+command+=" --gas-prices 0.1$FEETOKEN"
+command+=" --gas auto"
+command+=" --gas-adjustment 1.3"
+command+=" --node $NODE"
+command+=" -y"
+command+=" --log_level debug"
+
+execute_tx_block "$command"

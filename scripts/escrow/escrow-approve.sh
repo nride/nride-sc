@@ -1,10 +1,12 @@
 #!/bin/sh
 
+source ./scripts/util.sh
+
 FROM=$1
 ID=$2
 SECRET=$3
 
-$CMD tx wasm execute $ESCROW \
+command="$CMD tx wasm execute $ESCROW \
 '{"approve":{"id": "'"$ID"'", "secret": "'"$SECRET"'"}}' \
 --from $FROM \
 --fee-account $($CMD keys show -a faucet) \
@@ -13,5 +15,6 @@ $CMD tx wasm execute $ESCROW \
 --gas-prices 0.1$FEETOKEN \
 --chain-id $CHAINID \
 --node $NODE \
--b block \
--y
+-y"
+
+execute_tx_block "$command"

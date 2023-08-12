@@ -3,6 +3,8 @@
 function execute_tx_block() {
     local command=$1
     
+    echo $1
+    
     if txres=$($command 2>&1); then
         txcode=$(echo "$txres" | awk '/code:/ {print $2}')
         if [ "$txcode" -ne "0" ]; then
@@ -10,8 +12,10 @@ function execute_tx_block() {
             exit
         fi
         txhash=$(echo "$txres" | awk '/txhash:/ {print $2}')
+
+        echo "AAA $txres"
     else
-        echo "$txres"
+        echo "XXX $txres"
         exit
     fi
 
@@ -26,5 +30,5 @@ function execute_tx_block() {
         x=$(( $x + 1 ))        
     done
 
-    echo "$result"
+    echo "ZZZ $result"
 }

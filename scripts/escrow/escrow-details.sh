@@ -1,5 +1,11 @@
 #!/bin/sh
 
-$CMD query wasm contract-state smart $ESCROW \
-'{"details":{"id":"'"$1"'"}}' \
---node $NODE
+source ./scripts/util.sh
+
+command="$CMD query wasm contract-state smart $ESCROW" 
+command+=' {"details":{"id":"'"$1"'"}}'
+command+=" --node $NODE"
+
+echo $command
+
+execute_tx_block "$command"

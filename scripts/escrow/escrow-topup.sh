@@ -1,5 +1,7 @@
 #!/bin/sh
 
+source ./scripts/util.sh
+
 FROM=$1
 ID=$2
 LOCK=$3
@@ -25,7 +27,7 @@ TOKEN_EXECUTE='{"send": '"$SEND_CONTENT"'}';
 echo $TOKEN_EXECUTE | jq
 
 # cw20 contract
-$CMD tx wasm execute $NRIDE \
+command="$CMD tx wasm execute $NRIDE \
 "$TOKEN_EXECUTE" \
 --from $FROM \
 --fee-account $($CMD keys show -a faucet) \
@@ -35,4 +37,6 @@ $CMD tx wasm execute $NRIDE \
 --chain-id $CHAINID \
 --node $NODE \
 -b block \
--y
+-y"
+
+execute_tx_block "$command"
