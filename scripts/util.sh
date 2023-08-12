@@ -50,6 +50,7 @@ function execute_tx_block_2() {
         fi
         txhash=$(echo "$txres" | awk '/txhash:/ {print $2}')
     else
+        echo "$txres"
         exit
     fi
 

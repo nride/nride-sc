@@ -2,13 +2,14 @@
 
 source ./scripts/util.sh
 
-command="$CMD tx wasm store cw-plus/artifacts/cw20_base.wasm  \
-    --from faucet \
-    --chain-id=$CHAINID \
-    --gas-prices 0.1$FEETOKEN \
-    --gas auto \
-    --gas-adjustment 1.3 \
-    --node $NODE \
-    -y"
+command=($CMD tx wasm store)
+command+=(cw-plus/artifacts/cw20_base.wasm)
+command+=(--from faucet)
+command+=(--chain-id $CHAINID)
+command+=(--gas-prices 0.1$FEETOKEN)
+command+=(--gas auto)
+command+=(--gas-adjustment 1.3)
+command+=(--node $NODE)
+command+=(-y)
 
-execute_tx_block "$command"
+execute_tx_block_2 "${command[@]}"
