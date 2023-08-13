@@ -13,16 +13,6 @@ export ESCROW = juno1nc5tatafv6eyq7llkr2gv50ff9e22mnf70qgjlv737ktmt4eswrq68ev2p
 export REGISTRY = juno17p9rzwnnfxcjp32un9ug7yhhzgtkhvl9jfksztgw5uh69wac2pgszu8fr9
 
 ########################
-## JUNO UNI-5 Testnet ##
-########################
-# export NODE = https://rpc.uni.junonetwork.io:443
-# export CHAINID = uni-5
-# export FEETOKEN = ujunox
-# export NRIDE = juno1q9wr0p5wklvjusgaeq95fhfhg7mmtjn66z0aeky4acfnd2v62qhsdsd4nl
-# export ESCROW = juno1pyqazts4um8je4ard7s52y3nhfqaayl94jzmtwxzjnqj2jt3ehrq4avmjk # codeid 2736
-
-
-########################
 ## JUNO Mainnet       ##
 ########################
 # export NODE = https://rpc-juno.mib.tech:443
