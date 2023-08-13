@@ -14,4 +14,4 @@ command+=(--gas-adjustment 1.3)
 command+=(--node $NODE)
 command+=(-y) 
 
-execute_tx_block_2 "${command[@]}"
+execute_tx_block "${command[@]}"

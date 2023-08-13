@@ -38,4 +38,4 @@ command+=(--chain-id $CHAINID)
 command+=(--node $NODE)
 command+=(-y)
 
-execute_tx_block_2 "${command[@]}"
+execute_tx_block "${command[@]}"
