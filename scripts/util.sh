@@ -59,7 +59,7 @@ function execute_tx_block_2() {
     do
         if result=$($CMD q tx $txhash 2>&1); then
             echo "$result"
-            exit
+            return
         fi
         sleep 1
         x=$(( $x + 1 ))        
