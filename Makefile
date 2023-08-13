@@ -24,25 +24,6 @@ export REGISTRY = juno17p9rzwnnfxcjp32un9ug7yhhzgtkhvl9jfksztgw5uh69wac2pgszu8fr
 # export ESCROW = juno18a4v5qekm9a5dugfhkgyzv6wcxlys0jwh9p4y7k0hfuf9xvxhaksme8fac
 # # REGISTRY is the addres of the nRide registry contract
 # export REGISTRY = juno19385sh6ze678s6x49grc08cyqqmkv7djhy3wxqy6hnwc0ykkx9psa74hvc
-# # ICS20 is the address of the CW20-ICS20 contract that allows sending CW2O tokens
-# # through IBC
-# export ICS20 = juno1v4887y83d6g28puzvt8cl0f3cdhd3y6y9mpysnsp3k8krdm7l6jqgm0rkn
-# # JUNO_CHANNEL is the channel from JUNO to OSMOSIS, linked to the CW20-ICS20 
-# # contract above, through which NRIDE tokens are sent to OSMOSIS
-# export JUNO_CHANNEL = channel-47
-
-########################
-## OSMOSIS Mainnet    ##
-########################
-export OSMONODE = https://osmosis-rpc.polkachu.com:443
-export OSMO_CHANNEL = channel-169
-# IBCDENOM is the denomination of NRIDE tokens on OSMOSIS sent throught the 
-# CW20-ICS20 channel configured above
-export IBCDENOM = ibc/E750D31033DC1CF4A044C3AA0A8117401316DC918FBEBC4E3D34F91B09D5F54C
-# OSMO_POOL is the ID of the NRIDE/OSMO pool on Osmosis
-export OSMO_POOL = 924
-# GAUGE_ID is the ID of the incentives gauge in the osmo-nride pool
-export GAUGE_ID =  32110
 
 ################
 ## Demo Locks ##
@@ -173,46 +154,6 @@ native-balance:
 
 native-send:
 	./scripts/native-token/native-send.sh $(to) $(amount)
-
-native-balance-osmo:
-	./scripts/native-token/native-balance-osmo.sh $(acc)
-
-#############################
-
-ics20-channels:
-	./scripts/ibc/ics20-channels.sh
-
-ics20-channel:
-	./scripts/ibc/ics20-channel.sh $(JUNO_CHANNEL)
-
-ics20-transfer:
-	./scripts/ibc/ics20-transfer.sh $(from) $(to) $(amount) $(JUNO_CHANNEL)
-
-ics20-redeem:
-	./scripts/ibc/ics20-redeem.sh $(from) $(to) $(amount) $(OSMO_CHANNEL)
-
-#############################
-
-lp-create:
-	./scripts/lp/lp-create.sh $(config) $(acc)
-
-lp-info:
-	./scripts/lp/lp-info.sh $(OSMO_POOL)
-
-lp-spot:
-	./scripts/lp/lp-spot.sh $(OSMO_POOL) uosmo $(IBCDENOM)
-
-lp-liquidity:
-	./scripts/lp/lp-liquidity.sh $(OSMO_POOL)
-
-lp-share:
-	./scripts/lp/lp-share.sh $(OSMO_POOL)
-
-lp-gauge-info:
-	./scripts/lp/lp-gauge-info.sh $(GAUGE_ID)
-
-lp-gauge-add:
-	./scripts/lp/lp-gauge-add.sh $(acc) $(amount) $(GAUGE_ID)
 
 ################################
 

@@ -1,7 +1,0 @@
-{
-    "weights": "5ibc/E750D31033DC1CF4A044C3AA0A8117401316DC918FBEBC4E3D34F91B09D5F54C,5uosmo",
-    "initial-deposit": "[xxx]ibc/E750D31033DC1CF4A044C3AA0A8117401316DC918FBEBC4E3D34F91B09D5F54C,[xxx]uosmo",
-    "swap-fee": "0.002",
-    "exit-fee": "0",
-    "future-governor": ""
-   }
