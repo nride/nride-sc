@@ -3,60 +3,26 @@
   "title": "DetailsResponse",
   "type": "object",
   "required": [
-    "account_a_state",
-    "account_b_state",
     "closed",
+    "deposit",
     "id",
-    "required_deposit",
-    "t1_timeout",
-    "t2_timeout",
+    "lock",
     "user_a",
     "user_b"
   ],
   "properties": {
-    "account_a_lock": {
-      "type": [
-        "string",
-        "null"
-      ]
-    },
-    "account_a_state": {
-      "type": "string"
-    },
-    "account_b_lock": {
-      "type": [
-        "string",
-        "null"
-      ]
-    },
-    "account_b_state": {
-      "type": "string"
-    },
     "closed": {
       "type": "boolean"
+    },
+    "deposit": {
+      "$ref": "#/definitions/Balance"
     },
     "id": {
       "description": "id of this escrow",
       "type": "string"
     },
-    "payout": {
-      "type": [
-        "string",
-        "null"
-      ]
-    },
-    "required_deposit": {
-      "$ref": "#/definitions/Balance"
-    },
-    "t1_timeout": {
-      "type": "integer",
-      "format": "uint64",
-      "minimum": 0.0
-    },
-    "t2_timeout": {
-      "type": "integer",
-      "format": "uint64",
-      "minimum": 0.0
+    "lock": {
+      "type": "string"
     },
     "user_a": {
       "type": "string"
