@@ -269,12 +269,13 @@ mod tests {
             }
         );
 
+        // withdraw
         let (info, withdraw_msg) = get_withdraw_msg(
             USER_A_ADDR.to_string(),
             ESCROW_ID.to_string(),
             SECRET_A.to_string(),
         );  
-        let res = execute(deps.as_mut(), mock_env(), info, withdraw_msg).unwrap();
+        let res = execute(deps.as_mut(), mock_env(), info.clone(), withdraw_msg.clone()).unwrap();
         assert_eq!(1, res.messages.len());
         assert_eq!(("action", "withdraw"), res.attributes[0]);
         assert_eq!(("id", ESCROW_ID.to_string()), res.attributes[1]);
@@ -297,5 +298,15 @@ mod tests {
                 closed: true,
             }
         );
+
+        // withdraw when escrow closed
+        let err = execute(deps.as_mut(), mock_env(), info.clone(), withdraw_msg.clone()).unwrap_err();
+        assert!(matches!(err, ContractError::Closed{}));
     }
+
+    #[test]
+    fn withdraw_closed_escrow() {
+
+    }
+
 }
