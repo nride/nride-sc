@@ -1,0 +1,79 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ReceiveMsg",
+  "oneOf": [
+    {
+      "type": "object",
+      "required": [
+        "create"
+      ],
+      "properties": {
+        "create": {
+          "$ref": "#/definitions/CreateMsg"
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "required": [
+        "top_up"
+      ],
+      "properties": {
+        "top_up": {
+          "$ref": "#/definitions/TopUpMsg"
+        }
+      },
+      "additionalProperties": false
+    }
+  ],
+  "definitions": {
+    "CreateMsg": {
+      "type": "object",
+      "required": [
+        "account_b_lock",
+        "id",
+        "t1_timeout",
+        "t2_timeout",
+        "user_b"
+      ],
+      "properties": {
+        "account_b_lock": {
+          "type": "string"
+        },
+        "id": {
+          "description": "id is a human-readable name for the escrow to use later 3-20 bytes of utf-8 text",
+          "type": "string"
+        },
+        "t1_timeout": {
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0.0
+        },
+        "t2_timeout": {
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0.0
+        },
+        "user_b": {
+          "type": "string"
+        }
+      }
+    },
+    "TopUpMsg": {
+      "type": "object",
+      "required": [
+        "account_a_lock",
+        "id"
+      ],
+      "properties": {
+        "account_a_lock": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}
