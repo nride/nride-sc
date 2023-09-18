@@ -31,9 +31,6 @@ export REGISTRY = juno17p9rzwnnfxcjp32un9ug7yhhzgtkhvl9jfksztgw5uh69wac2pgszu8fr
 export ALICE_LOCK = 0330347c5cb0f1627bdd2e7b082504a443b2bf50ad2e3efbb4e754ebd687c78c24
 export ALICE_SECRET = 27874aa2b70ce7281c94413c36d44fac6fa6a1198f2c529188c4dd4f7a4e1870
 
-export BOB_LOCK = 032d5f7beb52d336163483804facb17c47033fb14dfc3f3c88235141bae1896fc8
-export BOB_SECRET= cde73ee8f8584c54ac455c941f75990f4bff47a4340023e3fd236344e9a7d4ea
-
 #############################
 
 compile-cw20:
@@ -41,9 +38,6 @@ compile-cw20:
 
 compile-escrow:
 	./scripts/compile.sh "$(shell pwd)/cw-nride-escrow"
-
-compile-escrow-v2:
-	./scripts/compile.sh "$(shell pwd)/cw-nride-escrow-v2"
 
 compile-registry:
 	./scripts/compile.sh "$(shell pwd)/cw-nride-registry"
@@ -67,106 +61,41 @@ demo-bootstrap:
 demo-create:
 	./scripts/escrow/escrow-create.sh alice test bob $(ALICE_LOCK)
 
-demo-topup:
-	./scripts/escrow/escrow-topup.sh bob test $(BOB_LOCK)
-
-demo-approve-alice:
-	./scripts/escrow/escrow-approve.sh alice test $(BOB_SECRET)
-
-demo-approve-bob:
-	./scripts/escrow/escrow-approve.sh bob test $(ALICE_SECRET)
-
-demo-cancel-alice:
-	./scripts/escrow/escrow-cancel.sh alice test
-
-demo-cancel-bob:
-	./scripts/escrow/escrow-cancel.sh bob test
-
 demo-withdraw:
-	./scripts/escrow/escrow-withdraw.sh bob test
+	./scripts/escrow/escrow-withdraw.sh bob test $(ALICE_SECRET)
+
+demo-cancel:
+	./scripts/escrow/escrow-cancel.sh alice test
 
 demo-details:
 	./scripts/escrow/escrow-details.sh test
 
 #############################
 
-# deploy and intialize the contracts
-# create grants for alice and bob accounts so that they can submit tx to the blockchain
-# give some NRIDE tokens to alice and bob
-demo-v2-bootstrap:
-	./scripts/bootstrap-v2.sh
+feegrant-list:
+	./scripts/feegrant/feegrant-list.sh $(grantee)
 
-demo-v2-create:
-	./scripts/escrow-v2/escrow-create.sh alice test bob $(ALICE_LOCK)
+feegrant-create:
+	./scripts/feegrant/feegrant-create.sh $(grantee)
 
-demo-v2-withdraw:
-	./scripts/escrow-v2/escrow-withdraw.sh bob test $(ALICE_SECRET)
+feegrant-revoke:
+	./scripts/feegrant/feegrant-revoke.sh $(grantee)
 
-demo-v2-cancel:
-	./scripts/escrow-v2/escrow-cancel.sh alice test
+################################
 
-demo-v2-details:
-	./scripts/escrow-v2/escrow-details.sh test
+native-balance:
+	./scripts/native-token/native-balance.sh $(addr)
 
-#############################
+native-send:
+	./scripts/native-token/native-send.sh $(to) $(amount)
 
-escrow-create:
-	./scripts/escrow/escrow-create.sh $(from) $(id) $(userb) $(ALICE_LOCK) 
-
-escrow-topup:
-	./scripts/escrow/escrow-topup.sh $(from) $(id) $(BOB_LOCK)
-
-escrow-approve:
-	./scripts/escrow/escrow-approve.sh $(from) $(id) $(secret)
-
-escrow-cancel:
-	./scripts/escrow/escrow-cancel.sh $(from) $(id)
-
-escrow-withdraw:
-	./scripts/escrow/escrow-withdraw.sh $(from) $(id)
-
-escrow-list:
-	./scripts/escrow/escrow-list.sh
-
-escrow-details:
-	./scripts/escrow/escrow-details.sh $(id)
-
-#############################
-
-escrow-v2-create:
-	./scripts/escrow-v2/escrow-create.sh $(from) $(id) $(userb) $(ALICE_LOCK) 
-
-escrow-v2-cancel:
-	./scripts/escrow-v2/escrow-cancel.sh $(from) $(id)
-
-escrow-v2-withdraw:
-	./scripts/escrow-v2/escrow-withdraw.sh $(from) $(id) $(ALICE_SECRET)
-
-escrow-v2-list:
-	./scripts/escrow-v2/escrow-list.sh
-
-escrow-v2-details:
-	./scripts/escrow-v2/escrow-details.sh $(id)
-
-#############################
+################################
 
 deploy-cw20:
 	./scripts/nride-token/deploy-cw20.sh
 
 init-cw20:
 	./scripts/nride-token/init-cw20.sh $(code)
-
-deploy-escrow:
-	./scripts/escrow/deploy-escrow.sh
-	
-init-escrow:
-	./scripts/escrow/init-escrow.sh $(code)
-
-deploy-escrow-v2:
-	./scripts/escrow-v2/deploy-escrow.sh
-
-init-escrow-v2:
-	./scripts/escrow-v2/init-escrow.sh $(code)
 
 token-info:
 	./scripts/nride-token/token-info.sh
@@ -186,22 +115,30 @@ token-send-to:
 token-send-grant:
 	./scripts/nride-token/token-send-grant.sh $(from) $(to) $(amount)
 
-feegrant-list:
-	./scripts/feegrant/feegrant-list.sh $(grantee)
-
-feegrant-create:
-	./scripts/feegrant/feegrant-create.sh $(grantee)
-
-feegrant-revoke:
-	./scripts/feegrant/feegrant-revoke.sh $(grantee)
-
-native-balance:
-	./scripts/native-token/native-balance.sh $(addr)
-
-native-send:
-	./scripts/native-token/native-send.sh $(to) $(amount)
-
 ################################
+
+deploy-escrow:
+	./scripts/escrow/deploy-escrow.sh
+	
+init-escrow:
+	./scripts/escrow/init-escrow.sh $(code)
+
+escrow-create:
+	./scripts/escrow/escrow-create.sh $(from) $(id) $(userb) $(ALICE_LOCK) 
+
+escrow-cancel:
+	./scripts/escrow/escrow-cancel.sh $(from) $(id)
+
+escrow-withdraw:
+	./scripts/escrow/escrow-withdraw.sh $(from) $(id) $(ALICE_SECRET)
+
+escrow-list:
+	./scripts/escrow/escrow-list.sh
+
+escrow-details:
+	./scripts/escrow/escrow-details.sh $(id)
+
+###################################
 
 deploy-registry:
 	./scripts/registry/deploy-registry.sh

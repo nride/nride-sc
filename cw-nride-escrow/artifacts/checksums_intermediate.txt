@@ -1,1 +1,1 @@
-e160460301c11fa4af81f73e7fa1f3902a5a78326b9e3d513622893aedf95969  ./target/wasm32-unknown-unknown/release/cw_nride_escrow.wasm
+6880d01fc24ddb12e3ea82e0ea31774df77f0f2d831ceacba3e5b85797cbbb61  /target/wasm32-unknown-unknown/release/cw_nride_escrow.wasm

@@ -1,9 +1,9 @@
 [package]
 name = "cw-nride-escrow"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["Martin Arrivets <arrivets@users.noreply.github.com>"]
 edition = "2021"
-description = "Implementation of an escrow for p2p transactions"
+description = "Implementation of an escrow for nRide transactions"
 license = "Apache-2.0"
 repository = "https://github.com/arrivets/nride-sc"
 homepage = "https://nride.com"

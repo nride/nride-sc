@@ -4,8 +4,9 @@ source ./scripts/util.sh
 
 FROM=$1
 ID=$2
+SECRET=$3
 
-json_msg='{"withdraw":{"id": "'"$ID"'"}}'
+json_msg='{"withdraw":{"id": "'"$ID"'", "secret":"'"$SECRET"'"}}'
 
 command=($CMD tx wasm execute $ESCROW)
 command+=("$json_msg")
