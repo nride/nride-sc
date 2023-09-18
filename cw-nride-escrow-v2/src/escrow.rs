@@ -21,7 +21,11 @@ pub struct Escrow {
     pub deposit: Balance,
     /// lock is the public key that guards the deposit. 
     /// the corresponding private key is necessary to withdraw.
-    pub lock: String
+    pub lock: String,
+    /// close indicates whether the escrow is closed and already settled
+    /// if this value is true, it is assumed that all payouts have already
+    /// been settled
+    pub closed: bool,
 }
 
 impl Escrow {
@@ -41,9 +45,12 @@ impl Escrow {
             user_b,
             deposit,
             lock: lock.to_string(),
+            closed: false,
         })
     }
 
+    /// check secret against lock
+    /// Returns an EscrowError:InvalidSecret if the secret is invalid
     pub fn unlock(&mut self, secret:&str) -> Result<(), EscrowError> {        
         let private_key = hex::decode(secret);
         if private_key.is_err() {
@@ -59,12 +66,19 @@ impl Escrow {
 
         let recomputed_public_key_str = hex::encode(recomputed_public_key);
 
-    
         if recomputed_public_key_str == self.lock {
             return Ok(());
         }
 
         return Err(EscrowError::InvalidSecret { });
+    }
+
+    /// close sets the closed flag to true 
+    /// we can only close if the payout has already been computed
+    /// which indireclty ensures that the escrow is in a closeable 
+    /// state
+    pub fn close(&mut self) {
+        self.closed = true;
     }
 }
 

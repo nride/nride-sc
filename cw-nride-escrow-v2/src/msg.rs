@@ -61,4 +61,5 @@ pub struct DetailsResponse {
     pub user_b: String,
     pub deposit: Balance,
     pub lock: String,
+    pub closed: bool,
 }

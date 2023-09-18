@@ -9,7 +9,7 @@ use cosmwasm_std::{
 use cw2::set_contract_version;
 use cw20::{Balance, Cw20CoinVerified, Cw20ExecuteMsg, Cw20ReceiveMsg};
 
-use crate::error::{ContractError, EscrowError};
+use crate::error::ContractError;
 use crate::msg::{
     CreateMsg, ExecuteMsg, InstantiateMsg, ReceiveMsg, QueryMsg, ListResponse, DetailsResponse, WithdrawMsg,
 };
@@ -67,7 +67,7 @@ pub fn execute_receive(
 
 pub fn execute_create(
     deps: DepsMut,
-    env: Env,
+    _env: Env,
     msg: CreateMsg,
     balance: Balance,
     sender: &Addr,
@@ -75,7 +75,7 @@ pub fn execute_create(
   
     let user_b_addr = deps.api.addr_validate(&msg.user_b)?;
 
-    let mut escrow = Escrow::create(
+    let escrow = Escrow::create(
         sender.clone(),
         user_b_addr,
         balance,
@@ -95,25 +95,21 @@ pub fn execute_create(
 
 pub fn execute_withdraw(
     deps: DepsMut,
-    env: Env,
+    _env: Env,
     msg: WithdrawMsg,
 ) -> Result<Response, ContractError> {
     // this fails if no escrow there
     let mut escrow = ESCROWS.load(deps.storage, &msg.id)?;
 
-    // if escrow.closed {
-    //     return Err(ContractError::Closed {  });
-    // }
-    
-    // // compute payout returns an error if the escrow is not in a withdrawable state
-    // // so the function will panic here if this is the case
-    // let payout = escrow.compute_payout(env)?;
-
-    // escrow.close();
-    
-    // ESCROWS.save(deps.storage, &msg.id, &escrow)?;
-
+    if escrow.closed {
+        return Err(ContractError::Closed {  });
+    }
+        
     escrow.unlock(&msg.secret)?;
+
+    escrow.close();
+    
+    ESCROWS.save(deps.storage, &msg.id, &escrow)?;
 
     let payments = create_payment_submsgs(escrow).unwrap();
     
@@ -161,6 +157,7 @@ fn query_details(deps: Deps, id: String) -> StdResult<DetailsResponse> {
         user_b: escrow.user_b.to_string(),
         deposit: escrow.deposit,
         lock: escrow.lock,
+        closed: escrow.closed,
     };
 
     Ok(details)
@@ -175,7 +172,7 @@ fn query_list(deps: Deps) -> StdResult<ListResponse> {
 #[cfg(test)]
 mod tests {
     use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info};
-    use cosmwasm_std::{ Uint128, Timestamp};
+    use cosmwasm_std::Uint128;
 
     use super::*;
 
@@ -184,8 +181,8 @@ mod tests {
     const USER_B_ADDR : &str = "user_b";
     const REQUIRED_TOKEN_ADDR: &str = "the_cw20_token";
     const REQUIRED_TOKEN_AMOUNT: u128 =  100;
-    const  LOCK_A: &str = "0330347c5cb0f1627bdd2e7b082504a443b2bf50ad2e3efbb4e754ebd687c78c24";
-    const  SECRET_A: &str =  "27874aa2b70ce7281c94413c36d44fac6fa6a1198f2c529188c4dd4f7a4e1870"; 
+    const LOCK_A: &str = "0330347c5cb0f1627bdd2e7b082504a443b2bf50ad2e3efbb4e754ebd687c78c24";
+    const SECRET_A: &str =  "27874aa2b70ce7281c94413c36d44fac6fa6a1198f2c529188c4dd4f7a4e1870"; 
 
     fn get_instantiate_msg() -> (MessageInfo, InstantiateMsg) {
         let instantiate_msg = InstantiateMsg {};
@@ -268,10 +265,10 @@ mod tests {
                     },
                 ),
                 lock: LOCK_A.to_string(),
+                closed: false,
             }
         );
 
-        
         let (info, withdraw_msg) = get_withdraw_msg(
             USER_A_ADDR.to_string(),
             ESCROW_ID.to_string(),
@@ -281,5 +278,24 @@ mod tests {
         assert_eq!(1, res.messages.len());
         assert_eq!(("action", "withdraw"), res.attributes[0]);
         assert_eq!(("id", ESCROW_ID.to_string()), res.attributes[1]);
+    
+        // ensure the escrow is closed
+        let details = query_details(deps.as_ref(), ESCROW_ID.to_string()).unwrap();
+        assert_eq!(
+            details,
+            DetailsResponse {
+                id: ESCROW_ID.to_string(),
+                user_a: USER_A_ADDR.to_string(),
+                user_b: USER_B_ADDR.to_string(),
+                deposit: Balance::Cw20(
+                    Cw20CoinVerified{
+                        address:Addr::unchecked(REQUIRED_TOKEN_ADDR),
+                        amount: Uint128::new(REQUIRED_TOKEN_AMOUNT),
+                    },
+                ),
+                lock: LOCK_A.to_string(),
+                closed: true,
+            }
+        );
     }
 }

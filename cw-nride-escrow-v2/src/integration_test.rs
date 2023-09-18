@@ -1,6 +1,6 @@
 #![cfg(test)]
 
-use cosmwasm_std::{coins, to_binary, Addr, Empty, Uint128, testing::mock_env, Timestamp};
+use cosmwasm_std::{coins, to_binary, Addr, Empty, Uint128};
 use cw20::{Cw20Coin, Cw20Contract, Cw20ExecuteMsg, Balance, Cw20CoinVerified};
 use cw_multi_test::{App, Contract, ContractWrapper, Executor};
 
@@ -170,6 +170,7 @@ fn escrow_happy_path_cw20_tokens() {
                 },
             ),
             lock: ALICE_LOCK.to_string(),
+            closed: false,
         }
     );
 
@@ -198,31 +199,25 @@ fn escrow_happy_path_cw20_tokens() {
         .unwrap();
     assert_eq!(escrow_balance, Uint128::new(0));
 
-    // // ensure escrow properly updated
-    // let details: DetailsResponse = router
-    //     .wrap()
-    //     .query_wasm_smart(&escrow_addr, &QueryMsg::Details { id: T_ID.to_string() })
-    //     .unwrap();
-    // assert_eq!(
-    //     details,
-    //     DetailsResponse {
-    //         id: T_ID.to_string(),
-    //         user_a: ALICE.to_string(),
-    //         account_a_state: "[FUNDED,APPROVED]".to_string(),
-    //         account_a_lock: Some(BOB_LOCK.to_string()),
-    //         user_b: BOB.to_string(),
-    //         account_b_state: "[FUNDED,APPROVED]".to_string(),
-    //         account_b_lock: Some(ALICE_LOCK.to_string()),
-    //         t1_timeout: T_T1_TIMEOUT.clone(),
-    //         t2_timeout: T_T2_TIMEOUT.clone(),
-    //         required_deposit: Balance::Cw20(
-    //             Cw20CoinVerified{
-    //                 address:Addr::unchecked(cash_addr.clone()),
-    //                 amount: Uint128::new(T_DEPOSIT_AMOUNT),
-    //             },
-    //         ),
-    //         payout: Some("(100,100)".to_string()),
-    //         closed: true,
-    //     }
-    // );
+    // ensure escrow properly closed
+    let details: DetailsResponse = router
+        .wrap()
+        .query_wasm_smart(&escrow_addr, &QueryMsg::Details { id: T_ID.to_string() })
+        .unwrap();
+    assert_eq!(
+        details,
+        DetailsResponse {
+            id: T_ID.to_string(),
+            user_a: ALICE.to_string(),
+            user_b: BOB.to_string(),
+            deposit: Balance::Cw20(
+                Cw20CoinVerified{
+                    address:Addr::unchecked(cash_addr.clone()),
+                    amount: Uint128::new(T_DEPOSIT_AMOUNT),
+                },
+            ),
+            lock: ALICE_LOCK.to_string(),
+            closed: true,
+        }
+    );
 }
