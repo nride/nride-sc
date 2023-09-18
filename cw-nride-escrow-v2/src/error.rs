@@ -15,6 +15,9 @@ pub enum ContractError {
     #[error("Escrow is closed")]
     Closed {},
 
+    #[error("Only escrow creator can cancel")]
+    InvalidUser {},
+
 }
 
 #[derive(Error, Debug, PartialEq)]
@@ -29,5 +32,5 @@ pub enum EscrowError {
     NoLock {},
 
     #[error("Invalid Secret")]
-    InvalidSecret {}
+    InvalidSecret {},
 }

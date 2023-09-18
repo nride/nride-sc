@@ -102,6 +102,9 @@ demo-v2-create:
 demo-v2-withdraw:
 	./scripts/escrow-v2/escrow-withdraw.sh bob test $(ALICE_SECRET)
 
+demo-v2-cancel:
+	./scripts/escrow-v2/escrow-cancel.sh alice test
+
 demo-v2-details:
 	./scripts/escrow-v2/escrow-details.sh test
 
@@ -133,6 +136,8 @@ escrow-details:
 escrow-v2-create:
 	./scripts/escrow-v2/escrow-create.sh $(from) $(id) $(userb) $(ALICE_LOCK) 
 
+escrow-v2-cancel:
+	./scripts/escrow-v2/escrow-cancel.sh $(from) $(id)
 
 escrow-v2-withdraw:
 	./scripts/escrow-v2/escrow-withdraw.sh $(from) $(id) $(ALICE_SECRET)

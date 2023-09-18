@@ -1,1 +1,1 @@
-698e8f56cb52d2f176d58ef0c77c55cbd87bbe10554648330e752ce0ebea952c  cw_nride_escrow_v2.wasm
+8ecb32220ea030965b41024450c34f70e25e98b96ee560df9e911c0cd93466df  cw_nride_escrow_v2.wasm

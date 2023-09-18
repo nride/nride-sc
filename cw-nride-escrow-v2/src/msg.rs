@@ -12,8 +12,9 @@ pub enum ExecuteMsg {
     /// This accepts a properly-encoded ReceiveMsg from a cw20 contract
     /// to create escrows
     Receive(Cw20ReceiveMsg),
-    /// Withdraw can be sent directly to the escrow contract
+    /// Withdraw and Cancel can be sent directly to the escrow contract
     Withdraw(WithdrawMsg),
+    Cancel{id:String},
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
