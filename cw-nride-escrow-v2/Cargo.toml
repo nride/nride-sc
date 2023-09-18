@@ -2,7 +2,7 @@
 name = "cw-nride-escrow-v2"
 version = "0.1.0"
 authors = ["Martin Arrivets <arrivets@users.noreply.github.com>"]
-edition = "2023"
+edition = "2021"
 description = "Implementation of an escrow for nRide transactions"
 license = "Apache-2.0"
 repository = "https://github.com/arrivets/nride-sc"
