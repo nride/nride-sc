@@ -21,7 +21,7 @@ pub struct Escrow {
     pub deposit: Balance,
     /// lock is the public key that guards the deposit. 
     /// the corresponding private key is necessary to withdraw.
-    pub lock: Option<String>
+    pub lock: String
 }
 
 impl Escrow {
@@ -40,15 +40,11 @@ impl Escrow {
             user_a,
             user_b,
             deposit,
-            lock: Some(lock.to_string()),
+            lock: lock.to_string(),
         })
     }
 
-    fn unlock(&mut self, secret:&str) -> Result<(), EscrowError> {
-        if self.lock.is_none() {
-            return Err(EscrowError::NoLock { });
-        }
-        
+    pub fn unlock(&mut self, secret:&str) -> Result<(), EscrowError> {        
         let private_key = hex::decode(secret);
         if private_key.is_err() {
             return Err(EscrowError::InvalidSecret {  });
@@ -63,9 +59,8 @@ impl Escrow {
 
         let recomputed_public_key_str = hex::encode(recomputed_public_key);
 
-        let lock = self.lock.clone().unwrap();
-
-        if recomputed_public_key_str == lock {
+    
+        if recomputed_public_key_str == self.lock {
             return Ok(());
         }
 
@@ -101,7 +96,7 @@ mod tests {
         
     
         assert_eq!(e.deposit, deposit.clone());
-        assert_eq!(e.lock, Some(DUMMY_LOCK.to_string()));
+        assert_eq!(e.lock, DUMMY_LOCK.to_string());
     }
 
     #[test]
