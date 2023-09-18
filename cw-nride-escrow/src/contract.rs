@@ -84,7 +84,6 @@ pub fn execute_create(
     sender: &Addr,
 ) -> Result<Response, ContractError> {
   
-
     let user_b_addr = deps.api.addr_validate(&msg.user_b)?;
 
     let mut escrow = Escrow::create(

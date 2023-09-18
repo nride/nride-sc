@@ -1,0 +1,1 @@
+b8bd78bc53cb50c5d2094faf0175558ab37acdb3e9abb248bac19931aacf13ad  /target/wasm32-unknown-unknown/release/cw_nride_escrow_v2.wasm

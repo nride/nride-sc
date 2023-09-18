@@ -42,6 +42,9 @@ compile-cw20:
 compile-escrow:
 	./scripts/compile.sh "$(shell pwd)/cw-nride-escrow"
 
+compile-escrow-v2:
+	./scripts/compile.sh "$(shell pwd)/cw-nride-escrow-v2"
+
 compile-registry:
 	./scripts/compile.sh "$(shell pwd)/cw-nride-registry"
 
@@ -87,6 +90,23 @@ demo-details:
 
 #############################
 
+# deploy and intialize the contracts
+# create grants for alice and bob accounts so that they can submit tx to the blockchain
+# give some NRIDE tokens to alice and bob
+demo-v2-bootstrap:
+	./scripts/bootstrap-v2.sh
+
+demo-v2-create:
+	./scripts/escrow-v2/escrow-create.sh alice test bob $(ALICE_LOCK)
+
+demo-v2-withdraw:
+	./scripts/escrow-v2/escrow-withdraw.sh bob test $(ALICE_SECRET)
+
+demo-v2-details:
+	./scripts/escrow-v2/escrow-details.sh test
+
+#############################
+
 escrow-create:
 	./scripts/escrow/escrow-create.sh $(from) $(id) $(userb) $(ALICE_LOCK) 
 
@@ -110,6 +130,21 @@ escrow-details:
 
 #############################
 
+escrow-v2-create:
+	./scripts/escrow-v2/escrow-create.sh $(from) $(id) $(userb) $(ALICE_LOCK) 
+
+
+escrow-v2-withdraw:
+	./scripts/escrow-v2/escrow-withdraw.sh $(from) $(id) $(ALICE_SECRET)
+
+escrow-v2-list:
+	./scripts/escrow-v2/escrow-list.sh
+
+escrow-v2-details:
+	./scripts/escrow-v2/escrow-details.sh $(id)
+
+#############################
+
 deploy-cw20:
 	./scripts/nride-token/deploy-cw20.sh
 
@@ -121,6 +156,12 @@ deploy-escrow:
 	
 init-escrow:
 	./scripts/escrow/init-escrow.sh $(code)
+
+deploy-escrow-v2:
+	./scripts/escrow-v2/deploy-escrow.sh
+
+init-escrow-v2:
+	./scripts/escrow-v2/init-escrow.sh $(code)
 
 token-info:
 	./scripts/nride-token/token-info.sh
