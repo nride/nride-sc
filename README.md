@@ -20,8 +20,8 @@ make compile-cw20
 
 ## Escrow 
 
-The escrow smart-contract implements an advanced escrow mechanism suitable
-for p2p transactions.
+The escrow smart-contract implements an mechanism used for paying for nRide 
+journeys.
 
 To compile:
 
@@ -34,20 +34,17 @@ More info about the escrow in [cw-nride-escrow](cw-nride-escrow/README.md)
 ## Demo
 
 We have two users, Alice and Bob, who will be using the escrow contract. Alice 
-creates the escrow, locking 100 NRIDE tokens, with T1 timeout in 2 minutes, 
-and T2 timeout in 5 minutes. Hence, Bob has 2 minutes to topup the contract, or 
-else it will enter the T1-Timeout state where Alice can get her full deposit 
-back. Once, Bob has topped up the escrow, both users have up to T2 timeout to 
-approve or cancel the escrow. At any time, they can attempt to withdraw and see 
-what the payout is. The contract returns an error if it is not in a withdrawable
-state. Here, we will walk through the happy case, where both users approve the 
-escrow on time, and get their full deposit back, but we encourage users to try 
-cancelling or letting the escrow timeout to see how it affects the payout.
+creates the escrow, locking 100 NRIDE tokens, with Bob as the counterparty. At 
+any time, Alice can call the `Cancel` method to cancel the escrow and get her
+deposit back. To withdraw from the escrow, Bob will need to obtain the secret 
+key from `Alice`. This happens off-chain (by sending a private message for 
+example).
+
+Here, we will walk through the happy case, where Bob obtains the secret key from
+Alice and withdraws from the escrow, but we encourage the reader to try 
+withdrawing with the wrong key, or to cancel the escrow from Alice's account.
 
 Note: This has only been tested on a Macbook Air with M1 processor
-
-We currently support two environments "Local" and "Testnet", but we will run 
-through the Local version, using a Docker container to run a single Juno node.
 
 ### Prerequisites
 
@@ -94,42 +91,18 @@ make demo-bootstrap
 
 ### Test happy case
 
+Note: 
+> at any time in this demo, run `make demo-details` and `make token-balalance-list`
+> to see what is happening with the escrow and with the user balances.
+
+
 1) Alice creates an escrow with Bob as counterparty
 
 ```
 make demo-create
 ```
 
-Note: 
-> at any time in this demo, run `make demo-details` and `make token-balalance-list`
-> to see what is happening with the escrow and with the user balances.
-
-
-2) Bob tops up the escrow
-
-```
-make demo-topup
-```
-
-3) Alice approves the escrow using bob's secret
-
-This assumes bob shared his secret with alice. The protocol doesn't cover how
-this happens, but it could be by tapping phones, or simply sending it over the
-network.
-
-```
-make demo-approve-alice
-```
-
-4) Bob approves the escrow using alice's secret
-
-```
-make demo-approve-bob
-```
-
-5) Withdraw
-
-Anyone can call withdraw to return funds 
+5) Bob withdraws
 
 ```
 make demo-withdraw
@@ -144,9 +117,8 @@ make token-balance-list
 
 ### Have fun!
 
-Try using `make demo-cancel-alice` or `make demo-cancel-bob` to see what 
-happens when one of the users cancels. Or try letting the escrow timeout to 
-see what happens.
+Try using `make demo-cancel` to see what happens if Alice cancels. Or try 
+withdrawing with the wrong secret.
 
 ## Registry
 
