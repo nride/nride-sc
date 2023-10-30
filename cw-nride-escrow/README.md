@@ -17,4 +17,4 @@ Note that only the creator can call the `cancel` method, but anyone can call the
 
 ## Usage
 
-try the [demo](../README.md#demo) and study the [scripts](../scripts/escrow/)!
+Try the [demo](../README.md#demo) and study the [scripts](../scripts/escrow/).

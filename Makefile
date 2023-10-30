@@ -5,26 +5,26 @@ export CMD = junod
 ###########
 ## LOCAL ##
 ###########
-# export NODE = http://localhost:26657
-# export CHAINID = testing
-# export FEETOKEN = ujunox
-# export NRIDE = juno14hj2tavq8fpesdwxxcu44rty3hh90vhujrvcmstl4zr3txmfvw9skjuwg8
-# export ESCROW = juno1nc5tatafv6eyq7llkr2gv50ff9e22mnf70qgjlv737ktmt4eswrq68ev2p
-# export REGISTRY = juno17p9rzwnnfxcjp32un9ug7yhhzgtkhvl9jfksztgw5uh69wac2pgszu8fr9
+export NODE = http://localhost:26657
+export CHAINID = testing
+export FEETOKEN = ujunox
+export NRIDE = juno14hj2tavq8fpesdwxxcu44rty3hh90vhujrvcmstl4zr3txmfvw9skjuwg8
+export ESCROW = juno1nc5tatafv6eyq7llkr2gv50ff9e22mnf70qgjlv737ktmt4eswrq68ev2p
+export REGISTRY = juno17p9rzwnnfxcjp32un9ug7yhhzgtkhvl9jfksztgw5uh69wac2pgszu8fr9
 
 ########################
 ## JUNO Mainnet       ##
 ########################
-export NODE = https://rpc-juno.mib.tech:443
-export CHAINID = juno-1
-export FEETOKEN = ujuno
-# NRIDE is the address of the NRIDE CW20 contract
-export NRIDE = juno1qmlchtmjpvu0cr7u0tad2pq8838h6farrrjzp39eqa9xswg7teussrswlq 
-# ESCROW is the address of the nRide escrow contract
-# code_id: 3638
-export ESCROW = juno1ja6wtu4e8fzdq0p00hua2j80yn89uzs30kdvxjn6ckzfq6gtsu5s359qar
-# REGISTRY is the addres of the nRide registry contract
-export REGISTRY = juno19385sh6ze678s6x49grc08cyqqmkv7djhy3wxqy6hnwc0ykkx9psa74hvc
+# export NODE = https://rpc-juno.mib.tech:443
+# export CHAINID = juno-1
+# export FEETOKEN = ujuno
+# # NRIDE is the address of the NRIDE CW20 contract
+# export NRIDE = juno1qmlchtmjpvu0cr7u0tad2pq8838h6farrrjzp39eqa9xswg7teussrswlq 
+# # ESCROW is the address of the nRide escrow contract
+# # code_id: 3638
+# export ESCROW = juno1ja6wtu4e8fzdq0p00hua2j80yn89uzs30kdvxjn6ckzfq6gtsu5s359qar
+# # REGISTRY is the addres of the nRide registry contract
+# export REGISTRY = juno19385sh6ze678s6x49grc08cyqqmkv7djhy3wxqy6hnwc0ykkx9psa74hvc
 
 ################
 ## Demo Locks ##
