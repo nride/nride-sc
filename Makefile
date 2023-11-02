@@ -22,7 +22,7 @@ export REGISTRY = juno17p9rzwnnfxcjp32un9ug7yhhzgtkhvl9jfksztgw5uh69wac2pgszu8fr
 # export NRIDE = juno1qmlchtmjpvu0cr7u0tad2pq8838h6farrrjzp39eqa9xswg7teussrswlq 
 # # ESCROW is the address of the nRide escrow contract
 # # code_id: 3638
-# export ESCROW = juno1ja6wtu4e8fzdq0p00hua2j80yn89uzs30kdvxjn6ckzfq6gtsu5s359qar
+# export ESCROW = juno10lmjjk2uj7cehk2972245ul0x36hv5m29wsacm0mmx69dkg78lgs7kh96z
 # # REGISTRY is the addres of the nRide registry contract
 # export REGISTRY = juno19385sh6ze678s6x49grc08cyqqmkv7djhy3wxqy6hnwc0ykkx9psa74hvc
 
