@@ -494,7 +494,6 @@ mod tests {
          assert!(matches!(err, ContractError::Closed{}));
     }
 
-
     #[test]
     fn cancel_happy_cw20() {
         let mut deps = mock_dependencies();
