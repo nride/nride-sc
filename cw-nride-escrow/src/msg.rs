@@ -9,12 +9,13 @@ pub struct InstantiateMsg {}
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum ExecuteMsg {
+    /// Create, Withdraw and Cancel can be sent directly to the escrow contract
+    Create(CreateMsg),
+    Withdraw(WithdrawMsg),
+    Cancel{id:String},
     /// This accepts a properly-encoded ReceiveMsg from a cw20 contract
     /// to create escrows
     Receive(Cw20ReceiveMsg),
-    /// Withdraw and Cancel can be sent directly to the escrow contract
-    Withdraw(WithdrawMsg),
-    Cancel{id:String},
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]

@@ -48,9 +48,10 @@ pub fn execute(
     msg: ExecuteMsg,
 ) -> Result<Response, ContractError> {
     match msg {
-        ExecuteMsg::Receive(msg) => execute_receive(deps, env, info, msg),
+        ExecuteMsg::Create(msg)=>execute_create(deps, env, msg, Balance::from(info.funds), &info.sender),
         ExecuteMsg::Withdraw(msg)  => execute_withdraw(deps, env, msg),
         ExecuteMsg::Cancel{id} => execute_cancel(deps, env, id, &info.sender),
+        ExecuteMsg::Receive(msg) => execute_receive(deps, env, info, msg),
     }
 }
 
