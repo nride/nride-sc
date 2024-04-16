@@ -2,8 +2,8 @@
 
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    from_binary, to_binary, Addr, Binary, Deps, DepsMut, Env, MessageInfo, Response,
-    StdResult, SubMsg, WasmMsg, BankMsg, StdError,
+    from_binary, to_binary, coins, Addr, Binary, Deps, DepsMut, Env, MessageInfo, Response,
+    StdResult, SubMsg, WasmMsg, BankMsg, StdError, 
 };
 
 use cw2::set_contract_version;
@@ -243,6 +243,23 @@ mod tests {
         sender_addr: String,
         escrow_id: String,
         user_b_addr: String,
+        lock: String) -> (MessageInfo, ExecuteMsg) {
+
+        let create_msg = CreateMsg {
+            id: escrow_id,
+            user_b: user_b_addr,
+            lock: lock,
+        };
+        let msg = ExecuteMsg::Create(create_msg.clone());
+        let balance = coins(100, "tokens");
+        let info = mock_info(&sender_addr, &balance);
+        return (info, msg);
+    }
+
+    fn get_receive_create_msg(
+        sender_addr: String,
+        escrow_id: String,
+        user_b_addr: String,
         lock: String,
         required_token_addr: String,
         required_token_amount: u128 ) -> (MessageInfo, ExecuteMsg){
@@ -271,7 +288,8 @@ mod tests {
             id: escrow_id,
             secret: secret,
         };
-        let info = mock_info(&sender_addr,  &[]);
+        let balance = coins(100, "tokens");
+        let info = mock_info(&sender_addr,  &balance);
         let msg = ExecuteMsg::Withdraw(withdraw.clone());
         return (info, msg);
     }
@@ -286,7 +304,7 @@ mod tests {
     }
 
     #[test]
-    fn withdraw_happy() {
+    fn withdraw_happy_native() {
         let mut deps = mock_dependencies();
 
         // instantiate an empty contract
@@ -295,7 +313,7 @@ mod tests {
         assert_eq!(0, res.messages.len());
 
         // create an escrow
-        let (info, create_msg) = get_create_msg(
+        let (info, create_msg) = get_receive_create_msg(
             USER_A_ADDR.to_string(),
             ESCROW_ID.to_string(),
             USER_B_ADDR.to_string(),
@@ -363,7 +381,7 @@ mod tests {
     }
 
     #[test]
-    fn cancel_happy() {
+    fn withdraw_happy_cw20() {
         let mut deps = mock_dependencies();
 
         // instantiate an empty contract
@@ -372,7 +390,7 @@ mod tests {
         assert_eq!(0, res.messages.len());
 
         // create an escrow
-        let (info, create_msg) = get_create_msg(
+        let (info, receive_create_msg) = get_receive_create_msg(
             USER_A_ADDR.to_string(),
             ESCROW_ID.to_string(),
             USER_B_ADDR.to_string(),
@@ -380,7 +398,84 @@ mod tests {
             REQUIRED_TOKEN_ADDR.to_string(),
             REQUIRED_TOKEN_AMOUNT,
         );
-        let _ = execute(deps.as_mut(), mock_env(), info, create_msg).unwrap();
+
+        let res = execute(deps.as_mut(), mock_env(), info, receive_create_msg).unwrap();
+        assert_eq!(0, res.messages.len());
+        assert_eq!(("action", "create"), res.attributes[0]);
+
+        // ensure the escrow is in the expected state
+        let details = query_details(deps.as_ref(), ESCROW_ID.to_string()).unwrap();
+        assert_eq!(
+            details,
+            DetailsResponse {
+                id: ESCROW_ID.to_string(),
+                user_a: USER_A_ADDR.to_string(),
+                user_b: USER_B_ADDR.to_string(),
+                deposit: Balance::Cw20(
+                    Cw20CoinVerified{
+                        address:Addr::unchecked(REQUIRED_TOKEN_ADDR),
+                        amount: Uint128::new(REQUIRED_TOKEN_AMOUNT),
+                    },
+                ),
+                lock: LOCK_A.to_string(),
+                closed: false,
+            }
+        );
+
+        // withdraw
+        let (info, withdraw_msg) = get_withdraw_msg(
+            USER_B_ADDR.to_string(),
+            ESCROW_ID.to_string(),
+            SECRET_A.to_string(),
+        );  
+        let res = execute(deps.as_mut(), mock_env(), info.clone(), withdraw_msg.clone()).unwrap();
+        assert_eq!(1, res.messages.len());
+        assert_eq!(("action", "withdraw"), res.attributes[0]);
+        assert_eq!(("id", ESCROW_ID.to_string()), res.attributes[1]);
+    
+        // ensure the escrow is closed
+        let details = query_details(deps.as_ref(), ESCROW_ID.to_string()).unwrap();
+        assert_eq!(
+            details,
+            DetailsResponse {
+                id: ESCROW_ID.to_string(),
+                user_a: USER_A_ADDR.to_string(),
+                user_b: USER_B_ADDR.to_string(),
+                deposit: Balance::Cw20(
+                    Cw20CoinVerified{
+                        address:Addr::unchecked(REQUIRED_TOKEN_ADDR),
+                        amount: Uint128::new(REQUIRED_TOKEN_AMOUNT),
+                    },
+                ),
+                lock: LOCK_A.to_string(),
+                closed: true,
+            }
+        );
+
+        // withdraw when escrow closed
+        let err = execute(deps.as_mut(), mock_env(), info.clone(), withdraw_msg.clone()).unwrap_err();
+        assert!(matches!(err, ContractError::Closed{}));
+    }
+
+    #[test]
+    fn cancel_happy_cw20() {
+        let mut deps = mock_dependencies();
+
+        // instantiate an empty contract
+        let (info, instantiate_msg) = get_instantiate_msg();
+        let res = instantiate(deps.as_mut(), mock_env(), info, instantiate_msg).unwrap();
+        assert_eq!(0, res.messages.len());
+
+        // create an escrow
+        let (info, receive_create_msg) = get_receive_create_msg(
+            USER_A_ADDR.to_string(),
+            ESCROW_ID.to_string(),
+            USER_B_ADDR.to_string(),
+            LOCK_A.to_string(),
+            REQUIRED_TOKEN_ADDR.to_string(),
+            REQUIRED_TOKEN_AMOUNT,
+        );
+        let _ = execute(deps.as_mut(), mock_env(), info, receive_create_msg).unwrap();
      
         // cancel
         let (info, cancel_msg) = get_cancel_msg(
@@ -426,7 +521,7 @@ mod tests {
         assert_eq!(0, res.messages.len());
 
         // create an escrow
-        let (info, create_msg) = get_create_msg(
+        let (info, receive_create_msg) = get_receive_create_msg(
             USER_A_ADDR.to_string(),
             ESCROW_ID.to_string(),
             USER_B_ADDR.to_string(),
@@ -434,7 +529,7 @@ mod tests {
             REQUIRED_TOKEN_ADDR.to_string(),
             REQUIRED_TOKEN_AMOUNT,
         );
-        let _ = execute(deps.as_mut(), mock_env(), info, create_msg).unwrap();
+        let _ = execute(deps.as_mut(), mock_env(), info, receive_create_msg).unwrap();
      
         // cancel
         let (info, cancel_msg) = get_cancel_msg(
