@@ -3,7 +3,7 @@
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
     from_binary, to_binary, Addr, Binary, Deps, DepsMut, Env, MessageInfo, Response,
-    StdResult, SubMsg, WasmMsg, StdError,
+    StdResult, SubMsg, WasmMsg, BankMsg, StdError,
 };
 
 use cw2::set_contract_version;
@@ -161,21 +161,29 @@ pub fn execute_cancel(
     Ok(res)
 }
 
-pub fn create_payment_submsgs(cw20_bal: Balance, recipient: Addr) -> StdResult<Vec<SubMsg>> {
+pub fn create_payment_submsgs(deposit: Balance, recipient: Addr) -> StdResult<Vec<SubMsg>> {
     let mut msgs: Vec<SubMsg> = vec![];
-    if let Balance::Cw20(token) = cw20_bal {
-        let payoff_msg = Cw20ExecuteMsg::Transfer {
-            recipient: recipient.to_string(),
-            amount:  token.amount,
-        };
-        let payoff_exec = SubMsg::new(WasmMsg::Execute {
-            contract_addr: token.address.to_string(),
-            msg: to_binary(&payoff_msg)?,
-            funds: vec![],
-        });
-        msgs.push(payoff_exec);      
-    } else {
-        return Err(StdError::GenericErr { msg: "native tokens not supported".to_string() });
+    
+    match deposit {
+        Balance::Cw20(token) => {
+            let payoff_msg = Cw20ExecuteMsg::Transfer {
+                recipient: recipient.to_string(),
+                amount:  token.amount,
+            };
+            let payoff_exec = SubMsg::new(WasmMsg::Execute {
+                contract_addr: token.address.to_string(),
+                msg: to_binary(&payoff_msg)?,
+                funds: vec![],
+            });
+            msgs.push(payoff_exec);   
+        }
+        Balance::Native(native_balance) => {
+            let payoff_msg = SubMsg::new(BankMsg::Send {
+                to_address: recipient.to_string(),
+                amount: native_balance.into_vec(),
+            });
+            msgs.push(payoff_msg);
+        }
     }
     Ok(msgs)
 }
