@@ -87,6 +87,9 @@ feegrant-revoke:
 native-balance:
 	./scripts/native-token/native-balance.sh $(addr)
 
+native-balance-list:
+	./scripts/native-token/native-balance-list.sh
+
 native-send:
 	./scripts/native-token/native-send.sh $(to) $(amount)
 
