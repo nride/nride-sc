@@ -8,6 +8,7 @@ export CMD = junod
 export NODE = http://localhost:26657
 export CHAINID = testing
 export FEETOKEN = ujunox
+export NATIVE = ucosm
 export NRIDE = juno14hj2tavq8fpesdwxxcu44rty3hh90vhujrvcmstl4zr3txmfvw9skjuwg8
 export ESCROW = juno1nc5tatafv6eyq7llkr2gv50ff9e22mnf70qgjlv737ktmt4eswrq68ev2p
 export REGISTRY = juno17p9rzwnnfxcjp32un9ug7yhhzgtkhvl9jfksztgw5uh69wac2pgszu8fr9
@@ -63,8 +64,7 @@ demo-create-cw20:
 	./scripts/escrow/escrow-create-cw20.sh alice test bob $(ALICE_LOCK)
 
 demo-create-native:
-	./scripts/escrow/escrow-create-native.sh alice test bob 20 ucosm $(ALICE_LOCK)
-
+	./scripts/escrow/escrow-create-native.sh alice test bob 100 $(NATIVE) $(ALICE_LOCK)
 
 demo-withdraw:
 	./scripts/escrow/escrow-withdraw.sh bob test $(ALICE_SECRET)

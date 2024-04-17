@@ -92,14 +92,18 @@ make demo-bootstrap
 ### Test happy case
 
 Note: 
-> at any time in this demo, run `make demo-details` and `make token-balalance-list`
+> At any time in this demo, run `make demo-details` and `make token-balalance-list`
 > to see what is happening with the escrow and with the user balances.
 
+Note:
+> The escrow also supports native tokens. Replace `make token-balance-list` with
+`make native-balance-list` and `make demo-create-cw20` with `make demo-create-native`
+in the examples below to use native tokens.
 
 1) Alice creates an escrow with Bob as counterparty
 
 ```
-make demo-create
+make demo-create-cw20
 ```
 
 5) Bob withdraws
