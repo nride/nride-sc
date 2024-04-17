@@ -16,3 +16,5 @@ source ${__dir}/feegrant/feegrant-create.sh bob
 
 source ${__dir}/nride-token/token-send.sh faucet alice 1000
 source ${__dir}/nride-token/token-send.sh faucet bob 1000
+source ${__dir}/native-token/native-send.sh alice 1000 ucosm
+source ${__dir}/native-token/native-send.sh bob 1000 ucosm

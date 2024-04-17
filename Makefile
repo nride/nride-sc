@@ -91,7 +91,7 @@ native-balance-list:
 	./scripts/native-token/native-balance-list.sh
 
 native-send:
-	./scripts/native-token/native-send.sh $(to) $(amount)
+	./scripts/native-token/native-send.sh $(to) $(amount) $(denom)
 
 ################################
 
