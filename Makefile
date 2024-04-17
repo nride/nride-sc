@@ -59,8 +59,12 @@ stop-node:
 demo-bootstrap:
 	./scripts/bootstrap.sh
 
-demo-create:
-	./scripts/escrow/escrow-create.sh alice test bob $(ALICE_LOCK)
+demo-create-cw20:
+	./scripts/escrow/escrow-create-cw20.sh alice test bob $(ALICE_LOCK)
+
+demo-create-native:
+	./scripts/escrow/escrow-create-native.sh alice test bob 20 ucosm $(ALICE_LOCK)
+
 
 demo-withdraw:
 	./scripts/escrow/escrow-withdraw.sh bob test $(ALICE_SECRET)
@@ -127,8 +131,11 @@ deploy-escrow:
 init-escrow:
 	./scripts/escrow/init-escrow.sh $(code)
 
-escrow-create:
-	./scripts/escrow/escrow-create.sh $(from) $(id) $(userb) $(ALICE_LOCK) 
+escrow-create-cw20:
+	./scripts/escrow/escrow-create-cw20.sh $(from) $(id) $(userb) $(ALICE_LOCK) 
+
+escrow-create-native:
+	./scripts/escrow/escrow-create-native.sh $(from) $(id) $(userb) $(amount) $(denom) $(ALICE_LOCK) 
 
 escrow-cancel:
 	./scripts/escrow/escrow-cancel.sh $(from) $(id)
